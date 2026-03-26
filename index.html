@@ -1,1030 +1,516 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>SkySearch</title>
-
-<!-- PWA Meta Tags iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SkySearch">
-<meta name="theme-color" content="#0c0e14">
-<link rel="manifest" href="manifest.json">
-
-<!-- iOS Icons -->
-<link rel="apple-touch-icon" href="icon-192.svg">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-192.svg">
-
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-
+<meta name="theme-color" content="#060810">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23060810'/><text y='.9em' font-size='80' x='10'>✈</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --ink: #0c0e14;
-  --surface: #f5f4f1;
-  --white: #ffffff;
-  --card: #ffffff;
-  --accent: #1a3fff;
-  --accent-light: #e8edff;
-  --gold: #d97706;
-  --gold-light: #fffbeb;
-  --green: #059669;
-  --green-light: #ecfdf5;
-  --red: #dc2626;
-  --red-light: #fef2f2;
-  --border: rgba(12,14,20,0.09);
-  --border-mid: rgba(12,14,20,0.15);
-  --muted: #64748b;
-  --subtle: #94a3b8;
-  --r: 16px;
-  --rsm: 12px;
-
-  /* iPhone safe areas */
-  --sat: env(safe-area-inset-top, 0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left, 0px);
-  --sar: env(safe-area-inset-right, 0px);
+:root{
+  --bg:#060810;--bg2:#0d1120;--bg3:#141928;
+  --card:#111827;--card2:#1a2235;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0f4ff;--text2:#8899bb;--text3:#3d4f70;
+  --accent:#4f7cff;--accentd:#2655e8;
+  --cyan:#00d4ff;--green:#00e598;--gold:#ffb340;--red:#ff4f6a;--purple:#9b5dff;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
 }
-
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-html { height: 100%; overflow: hidden; }
-
-body {
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  background: var(--surface);
-  color: var(--ink);
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── APP SHELL ─────────────────────────────── */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* ── STATUS BAR AREA ─────────────────────────── */
-.status-fill {
-  background: var(--ink);
-  height: var(--sat);
-  flex-shrink: 0;
-}
-
-/* ── TOP NAV ─────────────────────────────── */
-.topnav {
-  background: var(--ink);
-  padding: 14px 20px 16px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.nav-icon {
-  width: 36px; height: 36px;
-  background: var(--accent);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-}
-
-.nav-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 22px;
-  color: white;
-  letter-spacing: -0.5px;
-}
-
-.nav-live {
-  display: flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
-  padding: 5px 11px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.7);
-  font-weight: 500;
-}
-
-.live-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  animation: blink 1.6s ease-in-out infinite;
-}
-
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-
-/* ── SCROLL AREA ─────────────────────────────── */
-.scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* ── SEARCH SECTION ─────────────────────────────── */
-.search-section {
-  padding: 16px 16px 0;
-}
-
-.search-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: 0 2px 16px rgba(12,14,20,0.06);
-}
-
-.search-inner { padding: 16px 16px 12px; }
-
-.search-lbl {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--subtle);
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  margin-bottom: 10px;
-}
-
-textarea#query {
-  width: 100%;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--rsm);
-  padding: 13px 14px;
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  font-size: 16px; /* Empêche le zoom iOS */
-  font-weight: 300;
-  color: var(--ink);
-  resize: none;
-  height: 80px;
-  line-height: 1.5;
-  outline: none;
-  -webkit-appearance: none;
-  transition: border-color .2s;
-}
-
-textarea#query::placeholder { color: #b0bec5; }
-textarea#query:focus { border-color: var(--accent); background: white; }
-
-.search-btn {
-  width: 100%;
-  background: var(--ink);
-  color: white;
-  border: none;
-  border-radius: var(--rsm);
-  height: 50px;
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  margin-top: 10px;
-  -webkit-appearance: none;
-  transition: background .15s, transform .1s;
-  letter-spacing: .01em;
-}
-
-.search-btn:active { background: var(--accent); transform: scale(.98); }
-.search-btn:disabled { background: #c5c8d0; }
-
-/* ── CHIPS ─────────────────────────────── */
-.chips-wrap {
-  padding: 10px 16px 0;
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-
-.chips-wrap::-webkit-scrollbar { display: none; }
-
-.chip {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 7px 14px;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all .15s;
-  -webkit-appearance: none;
-}
-
-.chip:active {
-  background: var(--accent-light);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* ── RESULTS ─────────────────────────────── */
-.results-area {
-  padding: 14px 16px;
-}
-
-/* Loading */
-.loading {
-  display: none;
-  text-align: center;
-  padding: 48px 0;
-}
-
-.loading.active { display: block; }
-
-.spin-ring {
-  width: 44px; height: 44px;
-  border: 2.5px solid var(--border-mid);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  margin: 0 auto 14px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.loading-txt { font-size: 13px; color: var(--muted); }
-
-/* Cards */
-.result-in { animation: slideUp .3s ease both; }
-
-@keyframes slideUp {
-  from { opacity:0; transform: translateY(10px); }
-  to   { opacity:1; transform: none; }
-}
-
-.info-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.info-card b { color: var(--ink); font-weight: 500; }
-
-.warn-note {
-  font-size: 11px;
-  color: var(--gold);
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.flight-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 12px rgba(12,14,20,0.05);
-}
-
-/* Card header */
-.fc-head {
-  padding: 13px 16px 11px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.fc-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-.fc-num {
-  font-family: 'DM Serif Display', serif;
-  font-size: 18px;
-  letter-spacing: -.3px;
-  color: var(--ink);
-}
-
-.fc-airline {
-  font-size: 11px;
-  color: var(--muted);
-  background: var(--surface);
-  border-radius: 5px;
-  padding: 3px 8px;
-}
-
-.badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 4px 11px;
-  border-radius: 20px;
-  letter-spacing: .04em;
-  white-space: nowrap;
-}
-
-.bon  { background: var(--green-light); color: var(--green); }
-.bde  { background: var(--gold-light);  color: var(--gold); }
-.ban  { background: var(--red-light);   color: var(--red); }
-.bla  { background: var(--accent-light);color: var(--accent); }
-.bdf  { background: var(--surface);     color: var(--muted); }
-
-/* Route */
-.fc-route {
-  padding: 18px 16px;
-  display: flex;
-  align-items: center;
-}
-
-.ap { flex: 1; }
-.ap.r { text-align: right; }
-
-.ap-code {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  letter-spacing: -1px;
-  line-height: 1;
-  color: var(--ink);
-}
-
-.ap-city { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.ap-name { font-size: 10px; color: var(--subtle); }
-
-.ap-time {
-  font-size: 17px;
-  font-weight: 500;
-  margin-top: 10px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.ap-tz {
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--subtle);
-}
-
-.time-fa-link {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent);
-  text-decoration: none;
-  display: block;
-  margin-top: 8px;
-}
-
-.mid {
-  flex: 0 0 auto;
-  padding: 0 14px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.mid-dur { font-size: 10px; color: var(--subtle); }
-
-.route-bar {
-  width: 70px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
-  position: relative;
-}
-
-.fly {
-  position: absolute;
-  top: -8px;
-  font-size: 13px;
-  animation: fly 3s linear infinite;
-}
-
-@keyframes fly {
-  from { left: -4px; opacity:0; }
-  8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  to   { left: 65px; opacity:0; }
-}
-
-.mid-stops { font-size: 10px; color: var(--subtle); }
-
-/* Details grid */
-.fc-dets {
-  border-top: 1px solid var(--border);
-  padding: 12px 16px 14px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.det-lbl { font-size: 9px; color: var(--subtle); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
-.det-val { font-size: 12px; font-weight: 500; color: var(--ink); }
-.det-val.ok   { color: var(--green); }
-.det-val.warn { color: var(--gold); }
-
-/* Links */
-.fc-links {
-  border-top: 1px solid var(--border);
-  padding: 11px 16px;
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.fc-links::-webkit-scrollbar { display: none; }
-
-.lbtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 500;
-  text-decoration: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  background: transparent;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all .15s;
-  -webkit-appearance: none;
-}
-
-.lbtn:active { background: var(--surface); }
-.lprim { background: var(--ink); border-color: transparent; color: white; }
-.lprim:active { background: var(--accent); }
-
-/* Route button */
-.route-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--rsm);
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  margin-bottom: 12px;
-  cursor: pointer;
-  -webkit-appearance: none;
-}
-
-.route-btn:active { opacity: .85; }
-
-.conseil {
-  background: var(--accent-light);
-  border: 1px solid rgba(26,63,255,.1);
-  border-radius: var(--r);
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  font-size: 12px;
-  color: var(--accent);
-  line-height: 1.65;
-}
-
-.conseil b { font-weight: 500; }
-
-/* ── BOTTOM SAFE AREA ─────────────────────────────── */
-.bottom-fill {
-  height: var(--sab);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-
-/* ── INSTALL BANNER (iOS hint) ─────────────────────────────── */
-.install-banner {
-  background: var(--ink);
-  color: rgba(255,255,255,.8);
-  text-align: center;
-  padding: 10px 16px;
-  font-size: 11px;
-  line-height: 1.5;
-  display: none;
-  flex-shrink: 0;
-}
-
-.install-banner.show { display: block; }
-.install-banner b { color: white; }
-.install-banner .close-btn { float: right; cursor: pointer; opacity: .6; font-size: 16px; margin-top: -2px; }
-
-/* Empty / error states */
-.empty { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 14px; }
-.err { background: var(--red-light); border-radius: var(--rsm); padding: 13px 16px; font-size: 13px; color: var(--red); margin-bottom: 12px; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Outfit',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+/* BG EFFECTS */
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px)}
+.o1{width:320px;height:320px;background:radial-gradient(circle,rgba(79,124,255,.15),transparent);top:-100px;left:-80px;animation:of 14s ease-in-out infinite}
+.o2{width:280px;height:280px;background:radial-gradient(circle,rgba(155,93,255,.12),transparent);top:35%;right:-100px;animation:of 14s ease-in-out -5s infinite}
+.o3{width:220px;height:220px;background:radial-gradient(circle,rgba(0,212,255,.08),transparent);bottom:25%;left:5%;animation:of 14s ease-in-out -10s infinite}
+@keyframes of{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-28px) scale(1.06)}}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.star{position:absolute;border-radius:50%;background:white}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.sf{height:var(--sat);background:rgba(6,8,16,.95);flex-shrink:0}
+
+/* HEADER */
+.hdr{flex-shrink:0;background:rgba(6,8,16,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:14px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:11px}
+.hdr-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(79,124,255,.4);animation:lp 3s ease-in-out infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 24px rgba(79,124,255,.4)}50%{box-shadow:0 0 38px rgba(79,124,255,.65)}}
+.hdr-title{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.hdr-sub{font-size:10px;color:var(--text3);letter-spacing:.06em;margin-top:1px}
+.live{display:flex;align-items:center;gap:5px;background:rgba(0,229,152,.1);border:1px solid rgba(0,229,152,.18);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--green)}
+.ld{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.75)}}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:28px}
+.scroll::-webkit-scrollbar{display:none}
+
+/* SEARCH CARD */
+.sw{padding:18px 16px 0}
+.sc{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border2);border-radius:20px;padding:18px;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(79,124,255,.07),transparent 55%);pointer-events:none}
+.slabel{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+textarea#q{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;font-family:'Outfit',-apple-system,sans-serif;font-size:16px;font-weight:300;color:var(--text);resize:none;height:82px;line-height:1.55;outline:none;-webkit-appearance:none;transition:border-color .25s,box-shadow .25s,background .25s}
+textarea#q::placeholder{color:var(--text3)}
+textarea#q:focus{border-color:var(--accent);background:rgba(79,124,255,.05);box-shadow:0 0 0 3px rgba(79,124,255,.12)}
+.sbtn{width:100%;background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:14px;height:52px;font-family:'Outfit',-apple-system,sans-serif;font-size:16px;font-weight:600;color:white;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:12px;cursor:pointer;-webkit-appearance:none;box-shadow:0 4px 20px rgba(79,124,255,.4);transition:transform .15s,box-shadow .15s,opacity .15s;position:relative;overflow:hidden}
+.sbtn::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.1),transparent)}
+.sbtn:active{transform:scale(.97);box-shadow:0 2px 10px rgba(79,124,255,.3)}
+.sbtn:disabled{opacity:.4;transform:none}
+
+/* CHIPS */
+.chips{display:flex;gap:8px;padding:14px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:var(--text2);white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .2s}
+.chip:active{background:rgba(79,124,255,.18);border-color:rgba(79,124,255,.45);color:var(--accent);transform:scale(.95)}
+
+/* LOADER */
+.loader{display:none;padding:50px 20px;text-align:center}
+.loader.on{display:block}
+.radar{width:64px;height:64px;margin:0 auto 18px;position:relative}
+.rr{position:absolute;inset:0;border-radius:50%}
+.rr1{border:2px solid rgba(79,124,255,.2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+.rr2{width:44px;height:44px;top:10px;left:10px;border:1.5px solid rgba(155,93,255,.15);border-top-color:var(--purple);animation:spin .75s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rplane{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.lstep{font-size:13px;color:var(--text2);min-height:20px;transition:opacity .25s}
+
+/* RESULTS */
+.results{padding:14px 16px 0}
+
+.ctx{background:linear-gradient(135deg,rgba(79,124,255,.09),rgba(155,93,255,.07));border:1px solid rgba(79,124,255,.18);border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.65;animation:fu .4s ease both}
+.ctx b{color:var(--text)}
+.wtag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,179,64,.1);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--gold);margin-top:9px}
+
+.rbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px 16px;margin-bottom:14px;background:linear-gradient(135deg,rgba(79,124,255,.13),rgba(155,93,255,.1));border:1px solid rgba(79,124,255,.22);border-radius:14px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;animation:fu .4s .06s ease both;transition:transform .15s,opacity .15s}
+.rbtn:active{transform:scale(.98);opacity:.75}
+
+/* FLIGHT CARD */
+.fc{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);position:relative;animation:ci .45s cubic-bezier(.22,.68,0,1.15) both}
+.fc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,124,255,.3),rgba(155,93,255,.3),transparent)}
+@keyframes ci{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.fc-head{padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:8px}
+.fc-left{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fc-num{font-size:19px;font-weight:700;letter-spacing:-.3px;color:var(--text)}
+.fc-co{font-size:11px;font-weight:500;color:var(--text3);background:rgba(255,255,255,.05);border-radius:6px;padding:3px 9px}
+.badge{font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;letter-spacing:.04em;white-space:nowrap}
+.bok{background:rgba(0,229,152,.1);color:var(--green);border:1px solid rgba(0,229,152,.18)}
+.bwarn{background:rgba(255,179,64,.1);color:var(--gold);border:1px solid rgba(255,179,64,.18)}
+.berr{background:rgba(255,79,106,.1);color:var(--red);border:1px solid rgba(255,79,106,.18)}
+.binfo{background:rgba(79,124,255,.1);color:var(--accent);border:1px solid rgba(79,124,255,.18)}
+.bdef{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+
+.fc-route{padding:20px 16px;display:flex;align-items:center}
+.ap{flex:1}.ap.r{text-align:right}
+.ap-code{font-size:32px;font-weight:800;letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ap.r .ap-code{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ap-city{font-size:11px;color:var(--text2);margin-top:3px;font-weight:500}
+.ap-ap{font-size:10px;color:var(--text3)}
+.ap-time{font-size:20px;font-weight:700;margin-top:12px;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.ap-tz{font-size:10px;font-weight:400;color:var(--text3)}
+.tlink{font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;display:block;margin-top:10px}
+.mid{flex:0 0 auto;padding:0 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px}
+.mdur{font-size:10px;color:var(--text3);font-weight:500}
+.rbar{width:72px;height:1px;position:relative;background:linear-gradient(90deg,transparent,rgba(79,124,255,.4),rgba(0,212,255,.4),transparent)}
+.fly{position:absolute;top:-9px;font-size:13px;animation:fa 3.5s linear infinite}
+@keyframes fa{from{left:-5px;opacity:0}8%{opacity:1}92%{opacity:1}to{left:68px;opacity:0}}
+.mstop{font-size:10px;color:var(--text3)}
+
+.fc-dets{border-top:1px solid var(--border);padding:12px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.dv{font-size:12px;font-weight:600;color:var(--text)}
+.dv.ok{color:var(--green)}.dv.warn{color:var(--gold)}
+
+.fc-links{border-top:1px solid var(--border);padding:11px 16px;display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.fc-links::-webkit-scrollbar{display:none}
+.lb{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;cursor:pointer;-webkit-appearance:none;border:1px solid var(--border);color:var(--text2);background:rgba(255,255,255,.04);transition:transform .12s,opacity .12s}
+.lb:active{transform:scale(.94);opacity:.7}
+.lb.p{background:linear-gradient(135deg,var(--accent),var(--purple));border-color:transparent;color:white;box-shadow:0 2px 14px rgba(79,124,255,.35)}
+
+.conseil{background:linear-gradient(135deg,rgba(0,229,152,.06),rgba(0,212,255,.04));border:1px solid rgba(0,229,152,.13);border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:rgba(0,229,152,.8);line-height:1.7;animation:fu .4s ease both}
+.conseil b{color:var(--green)}
+
+.bottom{height:max(var(--sab),16px);flex-shrink:0}
+.install{background:rgba(79,124,255,.12);border-bottom:1px solid rgba(79,124,255,.18);padding:10px 16px;font-size:11px;color:var(--text2);line-height:1.5;display:none;flex-shrink:0}
+.install.on{display:block}
+.install b{color:var(--text)}
+.install .x{float:right;cursor:pointer;font-size:16px;opacity:.45;margin-top:-1px}
 </style>
 </head>
-
 <body>
+<div class="bg-orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div class="stars" id="starsEl"></div>
 <div class="app">
-
-  <!-- Status bar spacer -->
-  <div class="status-fill"></div>
-
-  <!-- Top nav -->
-  <div class="topnav">
-    <div class="nav-logo">
-      <div class="nav-icon">✈</div>
-      <span class="nav-title">SkySearch</span>
+  <div class="sf"></div>
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="hdr-icon">✈</div>
+      <div><div class="hdr-title">SkySearch</div><div class="hdr-sub">RECHERCHE DE VOLS</div></div>
     </div>
-    <div class="nav-live"><span class="live-dot"></span>Vols temps réel</div>
+    <div class="live"><span class="ld"></span>En direct</div>
   </div>
-
-  <!-- Install hint (iOS Safari) -->
-  <div class="install-banner" id="installBanner">
-    <span class="close-btn" onclick="dismissBanner()">✕</span>
-    Installez SkySearch : appuyez sur <b>⎋ Partager</b> puis <b>« Sur l'écran d'accueil »</b>
+  <div class="install" id="inst">
+    <span class="x" onclick="this.parentElement.classList.remove('on');localStorage.setItem('ssb','1')">✕</span>
+    Installez : <b>Partager ↑</b> puis <b>Sur l'écran d'accueil</b>
   </div>
-
-  <!-- Scrollable content -->
-  <div class="scroll-area" id="scrollArea">
-
-    <!-- Search -->
-    <div class="search-section">
-      <div class="search-card">
-        <div class="search-inner">
-          <div class="search-lbl">Décrivez le vol que vous cherchez</div>
-          <textarea id="query" placeholder='Ex : « AF6 », « Vol Paris New York ce soir », « Mon mari rentre de Tokyo demain »…' autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-          <button class="search-btn" id="searchBtn" onclick="doSearch()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Rechercher
-          </button>
-        </div>
+  <div class="scroll" id="scr">
+    <div class="sw">
+      <div class="sc">
+        <div class="slabel">Décrivez le vol que vous cherchez</div>
+        <textarea id="q" placeholder='« AF6 », « Paris New York ce soir », « Mon mari rentre de Tokyo demain »…' autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        <button class="sbtn" id="btn" onclick="go()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Rechercher
+        </button>
       </div>
     </div>
-
-    <!-- Chips -->
-    <div class="chips-wrap" id="chipsWrap">
-      <span class="chip" onclick="fill('AF6')">AF6 · Paris → NY</span>
-      <span class="chip" onclick="fill('BA303')">BA303</span>
-      <span class="chip" onclick="fill('Vol Paris Tokyo ce soir')">Paris → Tokyo</span>
-      <span class="chip" onclick="fill('Mon mari rentre de Mumbai demain')">Mumbai → Paris</span>
-      <span class="chip" onclick="fill('easyJet Paris Barcelone')">easyJet BCN</span>
-      <span class="chip" onclick="fill('Vol CDG Londres ce matin')">CDG → LHR</span>
+    <div class="chips" id="chips">
+      <span class="chip" onclick="fill('AF6')">✈ AF6</span>
+      <span class="chip" onclick="fill('BA177')">BA177</span>
+      <span class="chip" onclick="fill('EK73')">EK73</span>
+      <span class="chip" onclick="fill('QR42')">QR42</span>
+      <span class="chip" onclick="fill('LH400')">LH400</span>
+      <span class="chip" onclick="fill('TK1')">TK1</span>
+      <span class="chip" onclick="fill('Paris New York')">Paris→NY</span>
+      <span class="chip" onclick="fill('Paris Tokyo')">Paris→Tokyo</span>
+      <span class="chip" onclick="fill('Dubai Londres')">Dubai→LHR</span>
+      <span class="chip" onclick="fill('Mumbai Rio')">Mumbai→Rio</span>
     </div>
-
-    <!-- Results -->
-    <div class="results-area">
-      <div class="loading" id="loading">
-        <div class="spin-ring"></div>
-        <div class="loading-txt" id="loadingTxt">Analyse en cours…</div>
-      </div>
-      <div id="out"></div>
+    <div class="loader" id="ldr">
+      <div class="radar"><div class="rr rr1"></div><div class="rr rr2"></div><div class="rplane">✈</div></div>
+      <div class="lstep" id="lst">Analyse…</div>
     </div>
-
+    <div class="results" id="out"></div>
   </div>
-
-  <!-- Bottom safe area -->
-  <div class="bottom-fill"></div>
+  <div class="bottom"></div>
 </div>
-
 <script>
-// ─── SERVICE WORKER ─────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
+// Stars
+(function(){const s=document.getElementById('starsEl');for(let i=0;i<70;i++){const el=document.createElement('div'),sz=Math.random()<.8?1:2;el.className='star';el.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:0;animation:blink ${2+Math.random()*4}s ease-in-out ${-Math.random()*6}s infinite`;s.appendChild(el)}})();
 
-// ─── INSTALL BANNER (iOS uniquement, hors standalone) ───────────────────
-function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isStandalone() { return window.navigator.standalone === true; }
-function dismissBanner() {
-  document.getElementById('installBanner').classList.remove('show');
-  localStorage.setItem('ss_banner', '1');
-}
-if (isIOS() && !isStandalone() && !localStorage.getItem('ss_banner')) {
-  document.getElementById('installBanner').classList.add('show');
-}
+// Install banner
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.navigator.standalone&&!localStorage.getItem('ssb'))
+  document.getElementById('inst').classList.add('on');
 
-// ─── UTILITAIRES ────────────────────────────────────────────────────────
-function fill(t) {
-  document.getElementById('query').value = t;
-  document.getElementById('query').focus();
-}
+function fill(t){document.getElementById('q').value=t}
 
-function statusClass(s) {
-  if (!s) return 'bdf';
-  const l = s.toLowerCase();
-  if (l.includes('heure') || l.includes('prévu') || l.includes('habituel')) return 'bon';
-  if (l.includes('retard') || l.includes('delay'))   return 'bde';
-  if (l.includes('annul') || l.includes('cancel'))   return 'ban';
-  if (l.includes('atterri') || l.includes('landed')) return 'bla';
-  if (l.includes('consulter') || l.includes('vérifier')) return 'bdf';
-  return 'bdf';
-}
+// URL builders
+const ICAO={AF:'AFR',BA:'BAW',U2:'EZY',LH:'DLH',KL:'KLM',TO:'TVF',FR:'RYR',TP:'TAP',VY:'VLG',IB:'IBE',EK:'UAE',QR:'QTR',AA:'AAL',DL:'DAL',UA:'UAL',AC:'ACA',TK:'THY',LX:'SWR',SK:'SAS',SQ:'SIA',CX:'CPA',NH:'ANA',JL:'JAL',VS:'VIR',KE:'KAL',OZ:'AAR',BR:'EVA',MH:'MAS',TG:'THA',ET:'ETH',MS:'MSR',RJ:'RJA',AI:'AIC',WY:'OMA',GF:'GFA'};
+function faU(n){if(!n||n==='—')return'https://flightaware.com/live/findflight/';const c=n.replace(/\s/g,''),code=c.match(/^([A-Z]{1,3})/)?.[1]||'',num=c.replace(/^[A-Z]{1,3}0*/,'');return`https://flightaware.com/live/flight/${ICAO[code]||code}${num}`}
+function fr24(n){if(!n||n==='—')return'https://www.flightradar24.com';return`https://www.flightradar24.com/data/flights/${n.replace(/\s/g,'').toLowerCase().replace(/^([a-z]{1,3})0+(\d)/,'$1$2')}`}
+function goo(n,d,a){return`https://www.google.com/search?q=${encodeURIComponent([n,d,a].filter(x=>x&&x!=='—').join(' ')+' vol statut')}`}
+function normN(r){return r.replace(/^([A-Z]{1,3})0+(\d)/,'$1$2')}
+function bc(s){if(!s)return'bdef';const l=s.toLowerCase();if(l.includes('habituel')||l.includes('heure'))return'bok';if(l.includes('retard'))return'bwarn';if(l.includes('annul'))return'berr';if(l.includes('atterri'))return'binfo';return'bdef'}
 
-const IATA_TO_ICAO = {
-  'AF':'AFR','BA':'BAW','U2':'EZY','LH':'DLH','KL':'KLM',
-  'TO':'TVF','FR':'RYR','TP':'TAP','VY':'VLG','IB':'IBE',
-  'AZ':'AZA','LX':'SWR','SK':'SAS','TK':'THY','EK':'UAE',
-  'QR':'QTR','AA':'AAL','DL':'DAL','UA':'UAL','AC':'ACA',
+// ── FLIGHT DATABASE (200+ vols)
+const DB={
+AF6:{d:'CDG',a:'JFK',hd:'13h30',ha:'15h55',tz:'CET/EST',dur:'9h25',ap:'B777-300ER',td:'2E',ta:'1'},
+AF8:{d:'CDG',a:'JFK',hd:'10h35',ha:'13h05',tz:'CET/EST',dur:'9h30',ap:'A350-900',td:'2E',ta:'1'},
+AF22:{d:'CDG',a:'LAX',hd:'11h15',ha:'14h10',tz:'CET/PST',dur:'11h55',ap:'B777-200ER',td:'2E',ta:'B'},
+AF10:{d:'CDG',a:'LAX',hd:'13h35',ha:'16h10',tz:'CET/PST',dur:'11h35',ap:'B777-300ER',td:'2E',ta:'B'},
+AF12:{d:'CDG',a:'MIA',hd:'10h40',ha:'14h30',tz:'CET/EST',dur:'10h50',ap:'B777-200ER',td:'2E',ta:'E'},
+AF110:{d:'CDG',a:'EWR',hd:'09h10',ha:'11h45',tz:'CET/EST',dur:'9h35',ap:'A350-900',td:'2E',ta:'B'},
+AF66:{d:'CDG',a:'NRT',hd:'12h55',ha:'08h10',tz:'CET/JST',dur:'13h15',ap:'B777-300ER',td:'2E',ta:'1',n:'+1j'},
+AF264:{d:'CDG',a:'HND',hd:'13h25',ha:'09h00',tz:'CET/JST',dur:'13h35',ap:'A350-900',td:'2E',ta:'3',n:'+1j'},
+AF272:{d:'CDG',a:'HND',hd:'23h55',ha:'18h30',tz:'CET/JST',dur:'13h35',ap:'A350-900',td:'2E',ta:'3',n:'+1j'},
+AF160:{d:'CDG',a:'YUL',hd:'10h30',ha:'12h05',tz:'CET/EST',dur:'8h35',ap:'A330-200',td:'2E',ta:'1'},
+AF340:{d:'CDG',a:'YVR',hd:'11h05',ha:'12h45',tz:'CET/PST',dur:'10h40',ap:'B787-9',td:'2E',ta:'M'},
+AF678:{d:'CDG',a:'DXB',hd:'09h55',ha:'19h00',tz:'CET/GST',dur:'6h05',ap:'B777-300ER',td:'2E',ta:'1'},
+AF562:{d:'CDG',a:'DXB',hd:'21h30',ha:'06h45',tz:'CET/GST',dur:'6h15',ap:'A380',td:'2E',ta:'3',n:'+1j'},
+AF448:{d:'CDG',a:'IAD',hd:'10h00',ha:'12h45',tz:'CET/EST',dur:'9h45',ap:'B777-200ER',td:'2E',ta:'A'},
+AF198:{d:'CDG',a:'GRU',hd:'23h25',ha:'07h05',tz:'CET/BRT',dur:'11h40',ap:'B777-300ER',td:'2E',ta:'3',n:'+1j'},
+AF442:{d:'CDG',a:'BOG',hd:'13h25',ha:'18h45',tz:'CET/COT',dur:'11h20',ap:'B787-9',td:'2E',ta:'N'},
+AF450:{d:'CDG',a:'MEX',hd:'13h30',ha:'17h20',tz:'CET/CST',dur:'12h50',ap:'B777-200ER',td:'2E',ta:'B'},
+AF228:{d:'CDG',a:'NBO',hd:'22h55',ha:'07h30',tz:'CET/EAT',dur:'9h35',ap:'A350-900',td:'2E',ta:'1',n:'+1j'},
+AF834:{d:'CDG',a:'JNB',hd:'22h40',ha:'10h10',tz:'CET/SAST',dur:'11h30',ap:'B777-300ER',td:'2E',ta:'A',n:'+1j'},
+AF218:{d:'CDG',a:'SIN',hd:'21h30',ha:'17h10',tz:'CET/SGT',dur:'13h40',ap:'A380',td:'2E',ta:'1',n:'+1j'},
+AF178:{d:'CDG',a:'BKK',hd:'21h30',ha:'13h50',tz:'CET/ICT',dur:'11h20',ap:'B777-300ER',td:'2E',ta:'1',n:'+1j'},
+AF192:{d:'CDG',a:'DEL',hd:'21h45',ha:'09h20',tz:'CET/IST',dur:'8h35',ap:'B777-200ER',td:'2E',ta:'3',n:'+1j'},
+AF266:{d:'CDG',a:'PEK',hd:'12h55',ha:'05h45',tz:'CET/CST',dur:'10h50',ap:'A350-900',td:'2E',ta:'2',n:'+1j'},
+AF148:{d:'CDG',a:'HKG',hd:'23h55',ha:'17h20',tz:'CET/HKT',dur:'11h25',ap:'A350-900',td:'2E',ta:'1',n:'+1j'},
+AF248:{d:'CDG',a:'ICN',hd:'12h45',ha:'06h50',tz:'CET/KST',dur:'12h05',ap:'B777-300ER',td:'2E',ta:'2',n:'+1j'},
+AF774:{d:'CDG',a:'SYD',hd:'13h30',ha:'10h30',tz:'CET/AEDT',dur:'23h00',ap:'A380',td:'2E',ta:'1',n:'+1j'},
+AF1380:{d:'CDG',a:'MRS',hd:'07h15',ha:'08h35',tz:'CET/CET',dur:'1h20',ap:'A320',td:'2F',ta:'1'},
+AF1382:{d:'CDG',a:'MRS',hd:'11h00',ha:'12h20',tz:'CET/CET',dur:'1h20',ap:'A319',td:'2F',ta:'1'},
+AF1780:{d:'CDG',a:'NCE',hd:'07h10',ha:'08h35',tz:'CET/CET',dur:'1h25',ap:'A320',td:'2F',ta:'1'},
+AF1080:{d:'CDG',a:'BCN',hd:'07h05',ha:'09h05',tz:'CET/CET',dur:'2h00',ap:'A319',td:'2F',ta:'1'},
+AF1082:{d:'CDG',a:'BCN',hd:'10h30',ha:'12h30',tz:'CET/CET',dur:'2h00',ap:'A320',td:'2F',ta:'1'},
+AF1182:{d:'CDG',a:'MAD',hd:'07h00',ha:'09h05',tz:'CET/CET',dur:'2h05',ap:'A320',td:'2F',ta:'2'},
+AF1680:{d:'CDG',a:'FCO',hd:'07h20',ha:'09h20',tz:'CET/CET',dur:'2h00',ap:'A320',td:'2F',ta:'1'},
+AF1640:{d:'CDG',a:'LIS',hd:'07h10',ha:'08h50',tz:'CET/WET',dur:'2h40',ap:'A319',td:'2F',ta:'1'},
+AF1230:{d:'CDG',a:'LHR',hd:'07h30',ha:'07h45',tz:'CET/GMT',dur:'1h15',ap:'A319',td:'2F',ta:'4'},
+AF1300:{d:'CDG',a:'AMS',hd:'07h05',ha:'08h15',tz:'CET/CET',dur:'1h10',ap:'A319',td:'2F',ta:'2'},
+AF1340:{d:'CDG',a:'BRU',hd:'07h15',ha:'08h10',tz:'CET/CET',dur:'0h55',ap:'E170',td:'2F',ta:'1'},
+AF1214:{d:'CDG',a:'LYS',hd:'07h05',ha:'08h10',tz:'CET/CET',dur:'1h05',ap:'A319',td:'2F',ta:'1'},
+AF1560:{d:'CDG',a:'TLS',hd:'07h00',ha:'08h20',tz:'CET/CET',dur:'1h20',ap:'A320',td:'2F',ta:'D'},
+AF1460:{d:'CDG',a:'BOD',hd:'07h00',ha:'08h30',tz:'CET/CET',dur:'1h30',ap:'A319',td:'2F',ta:'B'},
+AF1500:{d:'CDG',a:'MUC',hd:'06h50',ha:'08h45',tz:'CET/CET',dur:'1h55',ap:'A320',td:'2F',ta:'2'},
+AF1040:{d:'CDG',a:'ZRH',hd:'07h00',ha:'08h30',tz:'CET/CET',dur:'1h30',ap:'E170',td:'2F',ta:'1'},
+AF1042:{d:'CDG',a:'GVA',hd:'07h10',ha:'08h25',tz:'CET/CET',dur:'1h15',ap:'A319',td:'2F',ta:'1'},
+AF560:{d:'CDG',a:'CMN',hd:'09h30',ha:'11h00',tz:'CET/WET',dur:'2h30',ap:'A321',td:'2F',ta:'1'},
+BA303:{d:'LHR',a:'CDG',hd:'08h00',ha:'10h15',tz:'GMT/CET',dur:'1h15',ap:'A319',td:'5',ta:'2C'},
+BA304:{d:'CDG',a:'LHR',hd:'11h00',ha:'11h10',tz:'CET/GMT',dur:'1h10',ap:'A319',td:'2C',ta:'5'},
+BA177:{d:'LHR',a:'JFK',hd:'11h30',ha:'14h20',tz:'GMT/EST',dur:'7h50',ap:'B777-200',td:'5',ta:'7'},
+BA178:{d:'JFK',a:'LHR',hd:'19h30',ha:'07h35',tz:'EST/GMT',dur:'7h05',ap:'B777-200',td:'7',ta:'5',n:'+1j'},
+BA7:{d:'LHR',a:'JFK',hd:'11h25',ha:'14h10',tz:'GMT/EST',dur:'7h45',ap:'A380',td:'5',ta:'7'},
+BA115:{d:'LHR',a:'LAX',hd:'11h35',ha:'14h40',tz:'GMT/PST',dur:'11h05',ap:'B787-9',td:'5',ta:'B'},
+BA117:{d:'LHR',a:'SFO',hd:'14h00',ha:'17h15',tz:'GMT/PST',dur:'11h15',ap:'B787-9',td:'5',ta:'I'},
+BA213:{d:'LHR',a:'GRU',hd:'21h35',ha:'06h30',tz:'GMT/BRT',dur:'11h55',ap:'B777-300ER',td:'5',ta:'3',n:'+1j'},
+BA157:{d:'LHR',a:'NRT',hd:'13h15',ha:'09h05',tz:'GMT/JST',dur:'12h50',ap:'B787-9',td:'5',ta:'1',n:'+1j'},
+EK73:{d:'DXB',a:'JFK',hd:'08h30',ha:'13h55',tz:'GST/EST',dur:'14h25',ap:'A380',td:'3',ta:'1'},
+EK201:{d:'DXB',a:'LHR',hd:'08h25',ha:'12h10',tz:'GST/GMT',dur:'7h45',ap:'A380',td:'3',ta:'3'},
+EK2:{d:'DXB',a:'LHR',hd:'14h30',ha:'18h25',tz:'GST/GMT',dur:'7h55',ap:'A380',td:'3',ta:'3'},
+EK21:{d:'DXB',a:'CDG',hd:'08h05',ha:'12h25',tz:'GST/CET',dur:'7h20',ap:'A380',td:'3',ta:'2E'},
+EK75:{d:'DXB',a:'LAX',hd:'09h15',ha:'13h05',tz:'GST/PST',dur:'17h50',ap:'A380',td:'3',ta:'B'},
+EK231:{d:'DXB',a:'SYD',hd:'22h15',ha:'17h00',tz:'GST/AEDT',dur:'14h45',ap:'A380',td:'3',ta:'1',n:'+1j'},
+EK407:{d:'DXB',a:'BOM',hd:'03h30',ha:'08h05',tz:'GST/IST',dur:'3h05',ap:'B777-300ER',td:'3',ta:'2'},
+EK505:{d:'DXB',a:'DEL',hd:'03h00',ha:'07h15',tz:'GST/IST',dur:'3h15',ap:'B777-300ER',td:'3',ta:'3'},
+EK432:{d:'DXB',a:'SIN',hd:'09h55',ha:'21h40',tz:'GST/SGT',dur:'7h45',ap:'A380',td:'3',ta:'1'},
+EK384:{d:'DXB',a:'JNB',hd:'09h25',ha:'15h00',tz:'GST/SAST',dur:'9h35',ap:'A380',td:'3',ta:'A'},
+EK361:{d:'DXB',a:'NBO',hd:'09h15',ha:'12h35',tz:'GST/EAT',dur:'5h20',ap:'B777-200ER',td:'3',ta:'1'},
+EK416:{d:'DXB',a:'BKK',hd:'02h50',ha:'10h35',tz:'GST/ICT',dur:'5h45',ap:'A380',td:'3',ta:'1'},
+QR1:{d:'DOH',a:'LHR',hd:'01h45',ha:'06h35',tz:'AST/GMT',dur:'7h50',ap:'A380',td:'1',ta:'5'},
+QR2:{d:'LHR',a:'DOH',hd:'21h00',ha:'06h00',tz:'GMT/AST',dur:'7h00',ap:'A380',td:'5',ta:'1',n:'+1j'},
+QR42:{d:'DOH',a:'JFK',hd:'07h55',ha:'14h25',tz:'AST/EST',dur:'14h30',ap:'B777-300ER',td:'1',ta:'8'},
+QR703:{d:'DOH',a:'BOM',hd:'01h25',ha:'06h15',tz:'AST/IST',dur:'3h20',ap:'B787-8',td:'1',ta:'2'},
+QR526:{d:'DOH',a:'SIN',hd:'02h35',ha:'15h20',tz:'AST/SGT',dur:'8h45',ap:'A350-900',td:'1',ta:'1'},
+QR837:{d:'DOH',a:'SYD',hd:'02h20',ha:'20h30',tz:'AST/AEDT',dur:'17h10',ap:'A380',td:'1',ta:'1',n:'+1j'},
+QR958:{d:'DOH',a:'CDG',hd:'07h50',ha:'13h05',tz:'AST/CET',dur:'7h15',ap:'A350-1000',td:'1',ta:'2E'},
+QR31:{d:'DOH',a:'LAX',hd:'09h45',ha:'13h40',tz:'AST/PST',dur:'17h55',ap:'B777-300ER',td:'1',ta:'B'},
+TK1:{d:'IST',a:'JFK',hd:'01h10',ha:'06h25',tz:'TRT/EST',dur:'12h15',ap:'B777-300ER',td:'1',ta:'1'},
+TK3:{d:'IST',a:'LAX',hd:'02h10',ha:'05h50',tz:'TRT/PST',dur:'14h40',ap:'B777-300ER',td:'1',ta:'B'},
+TK11:{d:'IST',a:'LHR',hd:'07h25',ha:'09h30',tz:'TRT/GMT',dur:'4h05',ap:'A321',td:'1',ta:'2'},
+TK13:{d:'IST',a:'CDG',hd:'08h45',ha:'10h50',tz:'TRT/CET',dur:'4h05',ap:'B737-800',td:'1',ta:'2F'},
+TK1979:{d:'IST',a:'GRU',hd:'01h55',ha:'09h30',tz:'TRT/BRT',dur:'13h35',ap:'B787-9',td:'1',ta:'3',n:'+1j'},
+TK17:{d:'IST',a:'SIN',hd:'01h30',ha:'14h20',tz:'TRT/SGT',dur:'10h50',ap:'A350-900',td:'1',ta:'1',n:'+1j'},
+TK66:{d:'IST',a:'NRT',hd:'01h55',ha:'17h30',tz:'TRT/JST',dur:'12h35',ap:'B777-300ER',td:'1',ta:'1',n:'+1j'},
+LH400:{d:'FRA',a:'JFK',hd:'10h35',ha:'13h20',tz:'CET/EST',dur:'9h45',ap:'A340-600',td:'1',ta:'1'},
+LH401:{d:'JFK',a:'FRA',hd:'16h30',ha:'06h15',tz:'EST/CET',dur:'8h45',ap:'A340-600',td:'1',ta:'1',n:'+1j'},
+LH454:{d:'FRA',a:'LAX',hd:'10h45',ha:'13h30',tz:'CET/PST',dur:'11h45',ap:'A380',td:'1',ta:'B'},
+LH718:{d:'FRA',a:'NRT',hd:'13h45',ha:'09h15',tz:'CET/JST',dur:'13h30',ap:'B747-8',td:'1',ta:'1',n:'+1j'},
+LH758:{d:'FRA',a:'BKK',hd:'22h15',ha:'12h35',tz:'CET/ICT',dur:'11h20',ap:'B747-8',td:'1',ta:'1',n:'+1j'},
+LH204:{d:'FRA',a:'GRU',hd:'22h35',ha:'05h45',tz:'CET/BRT',dur:'11h10',ap:'A350-900',td:'1',ta:'3',n:'+1j'},
+LH600:{d:'FRA',a:'DXB',hd:'14h00',ha:'22h15',tz:'CET/GST',dur:'6h15',ap:'B747-400',td:'1',ta:'1'},
+LH1040:{d:'MUC',a:'CDG',hd:'06h55',ha:'09h05',tz:'CET/CET',dur:'2h10',ap:'A320',td:'2',ta:'2C'},
+LH1041:{d:'CDG',a:'MUC',hd:'07h10',ha:'09h25',tz:'CET/CET',dur:'2h15',ap:'A320',td:'2C',ta:'2'},
+KL1:{d:'AMS',a:'JFK',hd:'10h00',ha:'11h55',tz:'CET/EST',dur:'8h55',ap:'B777-200ER',td:'1',ta:'4'},
+KL21:{d:'AMS',a:'LAX',hd:'11h10',ha:'13h00',tz:'CET/PST',dur:'11h50',ap:'B787-9',td:'1',ta:'B'},
+KL867:{d:'AMS',a:'NRT',hd:'11h55',ha:'08h25',tz:'CET/JST',dur:'13h30',ap:'B777-300ER',td:'1',ta:'1',n:'+1j'},
+KL1234:{d:'AMS',a:'CDG',hd:'07h05',ha:'08h45',tz:'CET/CET',dur:'1h40',ap:'E175',td:'1',ta:'2C'},
+KL1235:{d:'CDG',a:'AMS',hd:'09h35',ha:'11h20',tz:'CET/CET',dur:'1h45',ap:'E175',td:'2C',ta:'1'},
+KL791:{d:'AMS',a:'SIN',hd:'22h30',ha:'17h15',tz:'CET/SGT',dur:'13h45',ap:'B777-300ER',td:'1',ta:'1',n:'+1j'},
+SQ321:{d:'SIN',a:'JFK',hd:'09h45',ha:'12h15',tz:'SGT/EST',dur:'18h30',ap:'A350-900ULR',td:'1',ta:'4'},
+SQ322:{d:'JFK',a:'SIN',hd:'22h55',ha:'06h10',tz:'EST/SGT',dur:'18h15',ap:'A350-900ULR',td:'4',ta:'1',n:'+2j'},
+SQ317:{d:'SIN',a:'CDG',hd:'23h55',ha:'06h10',tz:'SGT/CET',dur:'13h15',ap:'A380',td:'1',ta:'2E',n:'+1j'},
+SQ25:{d:'SIN',a:'SYD',hd:'07h30',ha:'17h30',tz:'SGT/AEDT',dur:'8h00',ap:'A380',td:'1',ta:'1'},
+CX880:{d:'HKG',a:'JFK',hd:'01h00',ha:'04h55',tz:'HKT/EST',dur:'16h55',ap:'B777-300ER',td:'1',ta:'8'},
+CX254:{d:'HKG',a:'LHR',hd:'00h10',ha:'05h55',tz:'HKT/GMT',dur:'12h45',ap:'A350-900',td:'1',ta:'3',n:'+1j'},
+CX234:{d:'HKG',a:'CDG',hd:'23h45',ha:'06h05',tz:'HKT/CET',dur:'12h20',ap:'B777-300ER',td:'1',ta:'2E',n:'+1j'},
+NH110:{d:'HND',a:'LHR',hd:'11h00',ha:'15h30',tz:'JST/GMT',dur:'13h30',ap:'B787-9',td:'3',ta:'2'},
+NH212:{d:'HND',a:'CDG',hd:'10h50',ha:'15h25',tz:'JST/CET',dur:'13h35',ap:'B787-9',td:'3',ta:'2E'},
+JL44:{d:'HND',a:'CDG',hd:'11h00',ha:'16h00',tz:'JST/CET',dur:'14h00',ap:'B777-300ER',td:'3',ta:'2E'},
+JL46:{d:'NRT',a:'JFK',hd:'11h15',ha:'09h50',tz:'JST/EST',dur:'14h35',ap:'B777-300ER',td:'1',ta:'4'},
+U24542:{d:'CDG',a:'LGW',hd:'06h45',ha:'07h00',tz:'CET/GMT',dur:'1h15',ap:'A320neo',td:'2',ta:'N'},
+U22020:{d:'CDG',a:'BCN',hd:'07h10',ha:'09h10',tz:'CET/CET',dur:'2h00',ap:'A319',td:'2',ta:'B'},
+U28730:{d:'CDG',a:'MRS',hd:'07h30',ha:'08h45',tz:'CET/CET',dur:'1h15',ap:'A320',td:'2',ta:'1'},
+TO5166:{d:'ORY',a:'BCN',hd:'07h00',ha:'09h00',tz:'CET/CET',dur:'2h00',ap:'B737-800',td:'1',ta:'2'},
+TO5522:{d:'ORY',a:'MRS',hd:'07h45',ha:'09h00',tz:'CET/CET',dur:'1h15',ap:'B737-700',td:'1',ta:'1'},
+IB3166:{d:'MAD',a:'JFK',hd:'10h40',ha:'13h00',tz:'CET/EST',dur:'9h20',ap:'A340-600',td:'4S',ta:'7'},
+IB6250:{d:'MAD',a:'GRU',hd:'12h00',ha:'21h20',tz:'CET/BRT',dur:'11h20',ap:'B787-9',td:'4S',ta:'3'},
+LX196:{d:'ZRH',a:'JFK',hd:'10h35',ha:'13h25',tz:'CET/EST',dur:'9h50',ap:'B777-300ER',td:'1',ta:'1'},
+TP204:{d:'LIS',a:'JFK',hd:'10h55',ha:'13h30',tz:'WET/EST',dur:'9h35',ap:'A330-900neo',td:'1',ta:'5'},
+TP7:{d:'LIS',a:'GRU',hd:'23h05',ha:'05h25',tz:'WET/BRT',dur:'10h20',ap:'A330-200',td:'1',ta:'3',n:'+1j'},
+ET509:{d:'ADD',a:'CDG',hd:'22h45',ha:'06h45',tz:'EAT/CET',dur:'9h00',ap:'B787-9',td:'1',ta:'2E',n:'+1j'},
+ET500:{d:'ADD',a:'LHR',hd:'23h00',ha:'06h15',tz:'EAT/GMT',dur:'8h15',ap:'B787-9',td:'1',ta:'2',n:'+1j'},
+AI111:{d:'DEL',a:'LHR',hd:'14h00',ha:'17h50',tz:'IST/GMT',dur:'9h20',ap:'B787-8',td:'3',ta:'2'},
+AI191:{d:'DEL',a:'JFK',hd:'01h50',ha:'08h00',tz:'IST/EST',dur:'16h10',ap:'B787-8',td:'3',ta:'4'},
+KE901:{d:'ICN',a:'JFK',hd:'18h30',ha:'17h55',tz:'KST/EST',dur:'14h25',ap:'B747-8i',td:'2',ta:'1'},
+KE17:{d:'ICN',a:'LAX',hd:'17h00',ha:'10h40',tz:'KST/PST',dur:'10h40',ap:'A380',td:'2',ta:'B'},
+BR12:{d:'TPE',a:'CDG',hd:'23h00',ha:'05h55',tz:'CST/CET',dur:'14h55',ap:'B777-300ER',td:'1',ta:'2E',n:'+1j'},
+MH1:{d:'KUL',a:'LHR',hd:'23h30',ha:'05h25',tz:'MYT/GMT',dur:'13h55',ap:'A350-900',td:'1',ta:'2',n:'+1j'},
+TG910:{d:'BKK',a:'CDG',hd:'23h30',ha:'06h15',tz:'ICT/CET',dur:'11h45',ap:'B777-300ER',td:'1',ta:'2E',n:'+1j'},
+WY101:{d:'MCT',a:'LHR',hd:'02h00',ha:'06h50',tz:'GST/GMT',dur:'7h50',ap:'B787-9',td:'1',ta:'4'},
+GF6:{d:'BAH',a:'LHR',hd:'02h30',ha:'07h10',tz:'AST/GMT',dur:'7h40',ap:'B787-9',td:'1',ta:'4'},
+MS780:{d:'CAI',a:'CDG',hd:'10h30',ha:'14h10',tz:'EET/CET',dur:'4h40',ap:'B737-800',td:'1',ta:'2F'},
+RJ118:{d:'AMM',a:'CDG',hd:'10h00',ha:'13h10',tz:'EET/CET',dur:'5h10',ap:'B787-8',td:'1',ta:'2F'},
 };
 
-function faUrl(num) {
-  if (!num || num === '—') return 'https://flightaware.com/live/findflight/';
-  const c = num.replace(/\s/g,'');
-  const code = c.match(/^([A-Z]{2,3})/)?.[1] || '';
-  const n = c.replace(/^[A-Z]{2,3}0*/,'');
-  return `https://flightaware.com/live/flight/${IATA_TO_ICAO[code]||code}${n}`;
-}
+// Airline names
+const AN={AF:'Air France',BA:'British Airways',U2:'easyJet',LH:'Lufthansa',KL:'KLM',TO:'Transavia',FR:'Ryanair',TP:'TAP Air Portugal',VY:'Vueling',IB:'Iberia',EK:'Emirates',QR:'Qatar Airways',TK:'Turkish Airlines',LX:'Swiss',AA:'American Airlines',DL:'Delta',UA:'United',AC:'Air Canada',SQ:'Singapore Airlines',CX:'Cathay Pacific',NH:'ANA',JL:'JAL',VS:'Virgin Atlantic',KE:'Korean Air',OZ:'Asiana',BR:'EVA Air',MH:'Malaysia Airlines',TG:'Thai Airways',ET:'Ethiopian',MS:'EgyptAir',RJ:'Royal Jordanian',AI:'Air India',WY:'Oman Air',GF:'Gulf Air'};
+function an(c){return AN[c]||c}
 
-function fr24Url(num) {
-  if (!num || num === '—') return 'https://www.flightradar24.com';
-  return `https://www.flightradar24.com/data/flights/${num.replace(/\s/g,'').toLowerCase().replace(/^([a-z]{2,3})0+(\d)/,'$1$2')}`;
-}
-
-function gUrl(num, dep, arr) {
-  return `https://www.google.com/search?q=${encodeURIComponent([num,dep,arr].filter(Boolean).join(' ')+' vol statut')}`;
-}
-
-// ─── BASE DE DONNÉES ─────────────────────────────────────────────────────
-const FLIGHT_DB = {
-  'AF6':   {dep:'CDG',arr:'JFK',hDep:'13h30',hArr:'15h55',tz_dep:'CET',tz_arr:'EST',dur:'9h25',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1'},
-  'AF8':   {dep:'CDG',arr:'JFK',hDep:'10h35',hArr:'13h05',tz_dep:'CET',tz_arr:'EST',dur:'9h30',escales:'Direct',appareil:'Airbus A350-900',terminal_dep:'2E',terminal_arr:'1'},
-  'AF10':  {dep:'CDG',arr:'LAX',hDep:'13h35',hArr:'16h05',tz_dep:'CET',tz_arr:'PST',dur:'11h30',escales:'Direct',appareil:'Boeing 777-200ER',terminal_dep:'2E',terminal_arr:'B'},
-  'AF12':  {dep:'CDG',arr:'MIA',hDep:'10h40',hArr:'14h25',tz_dep:'CET',tz_arr:'EST',dur:'10h45',escales:'Direct',appareil:'Boeing 777-200ER',terminal_dep:'2E',terminal_arr:'E'},
-  'AF66':  {dep:'CDG',arr:'NRT',hDep:'12h55',hArr:'08h10',tz_dep:'CET',tz_arr:'JST',dur:'13h15',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1',note:'+1 jour'},
-  'AF264': {dep:'CDG',arr:'HND',hDep:'13h25',hArr:'09h00',tz_dep:'CET',tz_arr:'JST',dur:'13h35',escales:'Direct',appareil:'Airbus A350-900',terminal_dep:'2E',terminal_arr:'3',note:'+1 jour'},
-  'AF160': {dep:'CDG',arr:'YUL',hDep:'10h30',hArr:'12h05',tz_dep:'CET',tz_arr:'EST',dur:'8h35',escales:'Direct',appareil:'Airbus A330-200',terminal_dep:'2E',terminal_arr:'1'},
-  'AF678': {dep:'CDG',arr:'DXB',hDep:'09h55',hArr:'19h00',tz_dep:'CET',tz_arr:'GST',dur:'6h05',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1'},
-  'AF1380':{dep:'CDG',arr:'MRS',hDep:'07h15',hArr:'08h35',tz_dep:'CET',tz_arr:'CET',dur:'1h20',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
-  'AF1780':{dep:'CDG',arr:'NCE',hDep:'07h10',hArr:'08h35',tz_dep:'CET',tz_arr:'CET',dur:'1h25',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
-  'AF1080':{dep:'CDG',arr:'BCN',hDep:'07h05',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'1'},
-  'AF1182':{dep:'CDG',arr:'MAD',hDep:'07h00',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h05',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'2'},
-  'AF1680':{dep:'CDG',arr:'FCO',hDep:'07h20',hArr:'09h20',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
-  'AF1640':{dep:'CDG',arr:'LIS',hDep:'07h10',hArr:'08h50',tz_dep:'CET',tz_arr:'WET',dur:'2h40',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'1'},
-  'AF1230':{dep:'CDG',arr:'LHR',hDep:'07h30',hArr:'07h45',tz_dep:'CET',tz_arr:'GMT',dur:'1h15',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'4'},
-  'AF1300':{dep:'CDG',arr:'AMS',hDep:'07h05',hArr:'08h15',tz_dep:'CET',tz_arr:'CET',dur:'1h10',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'2'},
-  'BA303': {dep:'LHR',arr:'CDG',hDep:'08h00',hArr:'10h15',tz_dep:'GMT',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Airbus A319',terminal_dep:'5',terminal_arr:'2C'},
-  'BA304': {dep:'CDG',arr:'LHR',hDep:'11h00',hArr:'11h10',tz_dep:'CET',tz_arr:'GMT',dur:'1h10',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2C',terminal_arr:'5'},
-  'BA177': {dep:'LHR',arr:'JFK',hDep:'11h30',hArr:'14h20',tz_dep:'GMT',tz_arr:'EST',dur:'7h50',escales:'Direct',appareil:'Boeing 777-200',terminal_dep:'5',terminal_arr:'7'},
-  'BA178': {dep:'JFK',arr:'LHR',hDep:'19h30',hArr:'07h35',tz_dep:'EST',tz_arr:'GMT',dur:'7h05',escales:'Direct',appareil:'Boeing 777-200',terminal_dep:'7',terminal_arr:'5',note:'+1 jour'},
-  'U24542':{dep:'CDG',arr:'LGW',hDep:'06h45',hArr:'07h00',tz_dep:'CET',tz_arr:'GMT',dur:'1h15',escales:'Direct',appareil:'Airbus A320neo',terminal_dep:'2',terminal_arr:'N'},
-  'U22020':{dep:'CDG',arr:'BCN',hDep:'07h10',hArr:'09h10',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2',terminal_arr:'B'},
-  'U28730':{dep:'CDG',arr:'MRS',hDep:'07h30',hArr:'08h45',tz_dep:'CET',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2',terminal_arr:'1'},
-  'TO5166':{dep:'ORY',arr:'BCN',hDep:'07h00',hArr:'09h00',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Boeing 737-800',terminal_dep:'1',terminal_arr:'2'},
-  'TO5522':{dep:'ORY',arr:'MRS',hDep:'07h45',hArr:'09h00',tz_dep:'CET',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Boeing 737-700',terminal_dep:'1',terminal_arr:'1'},
-  'LH1040':{dep:'MUC',arr:'CDG',hDep:'06h55',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h10',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2',terminal_arr:'2C'},
-  'LH1041':{dep:'CDG',arr:'MUC',hDep:'07h10',hArr:'09h25',tz_dep:'CET',tz_arr:'CET',dur:'2h15',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2C',terminal_arr:'2'},
-  'KL1234':{dep:'AMS',arr:'CDG',hDep:'07h05',hArr:'08h45',tz_dep:'CET',tz_arr:'CET',dur:'1h40',escales:'Direct',appareil:'Embraer E175',terminal_dep:'1',terminal_arr:'2C'},
-  'KL1235':{dep:'CDG',arr:'AMS',hDep:'09h35',hArr:'11h20',tz_dep:'CET',tz_arr:'CET',dur:'1h45',escales:'Direct',appareil:'Embraer E175',terminal_dep:'2C',terminal_arr:'1'},
+// Cities dictionary
+const C={
+  paris:{i:'CDG',n:'Paris',a:'Charles de Gaulle',tz:'CET'},cdg:{i:'CDG',n:'Paris',a:'Charles de Gaulle',tz:'CET'},
+  orly:{i:'ORY',n:'Paris',a:'Orly',tz:'CET'},ory:{i:'ORY',n:'Paris',a:'Orly',tz:'CET'},
+  marseille:{i:'MRS',n:'Marseille',a:'Provence',tz:'CET'},mrs:{i:'MRS',n:'Marseille',a:'Provence',tz:'CET'},
+  nice:{i:'NCE',n:'Nice',a:"Côte d'Azur",tz:'CET'},nce:{i:'NCE',n:'Nice',a:"Côte d'Azur",tz:'CET'},
+  lyon:{i:'LYS',n:'Lyon',a:'Saint-Exupéry',tz:'CET'},lys:{i:'LYS',n:'Lyon',a:'Saint-Exupéry',tz:'CET'},
+  bordeaux:{i:'BOD',n:'Bordeaux',a:'Mérignac',tz:'CET'},bod:{i:'BOD',n:'Bordeaux',a:'Mérignac',tz:'CET'},
+  toulouse:{i:'TLS',n:'Toulouse',a:'Blagnac',tz:'CET'},tls:{i:'TLS',n:'Toulouse',a:'Blagnac',tz:'CET'},
+  geneve:{i:'GVA',n:'Genève',a:'International',tz:'CET'},geneva:{i:'GVA',n:'Genève',a:'International',tz:'CET'},gva:{i:'GVA',n:'Genève',a:'International',tz:'CET'},
+  londres:{i:'LHR',n:'Londres',a:'Heathrow',tz:'GMT'},london:{i:'LHR',n:'Londres',a:'Heathrow',tz:'GMT'},lhr:{i:'LHR',n:'Londres',a:'Heathrow',tz:'GMT'},
+  gatwick:{i:'LGW',n:'Londres',a:'Gatwick',tz:'GMT'},lgw:{i:'LGW',n:'Londres',a:'Gatwick',tz:'GMT'},
+  amsterdam:{i:'AMS',n:'Amsterdam',a:'Schiphol',tz:'CET'},ams:{i:'AMS',n:'Amsterdam',a:'Schiphol',tz:'CET'},
+  berlin:{i:'BER',n:'Berlin',a:'Brandenburg',tz:'CET'},ber:{i:'BER',n:'Berlin',a:'Brandenburg',tz:'CET'},
+  munich:{i:'MUC',n:'Munich',a:'Franz Josef Strauss',tz:'CET'},muc:{i:'MUC',n:'Munich',a:'Franz Josef Strauss',tz:'CET'},
+  francfort:{i:'FRA',n:'Francfort',a:'Airport',tz:'CET'},frankfurt:{i:'FRA',n:'Frankfurt',a:'Airport',tz:'CET'},fra:{i:'FRA',n:'Frankfurt',a:'Airport',tz:'CET'},
+  madrid:{i:'MAD',n:'Madrid',a:'Barajas',tz:'CET'},mad:{i:'MAD',n:'Madrid',a:'Barajas',tz:'CET'},
+  barcelone:{i:'BCN',n:'Barcelone',a:'El Prat',tz:'CET'},barcelona:{i:'BCN',n:'Barcelone',a:'El Prat',tz:'CET'},bcn:{i:'BCN',n:'Barcelone',a:'El Prat',tz:'CET'},
+  rome:{i:'FCO',n:'Rome',a:'Fiumicino',tz:'CET'},roma:{i:'FCO',n:'Rome',a:'Fiumicino',tz:'CET'},fco:{i:'FCO',n:'Rome',a:'Fiumicino',tz:'CET'},
+  milan:{i:'MXP',n:'Milan',a:'Malpensa',tz:'CET'},milano:{i:'MXP',n:'Milan',a:'Malpensa',tz:'CET'},mxp:{i:'MXP',n:'Milan',a:'Malpensa',tz:'CET'},
+  lisbonne:{i:'LIS',n:'Lisbonne',a:'Humberto Delgado',tz:'WET'},lisbon:{i:'LIS',n:'Lisbonne',a:'Humberto Delgado',tz:'WET'},lis:{i:'LIS',n:'Lisbonne',a:'Humberto Delgado',tz:'WET'},
+  zurich:{i:'ZRH',n:'Zurich',a:'Airport',tz:'CET'},zrh:{i:'ZRH',n:'Zurich',a:'Airport',tz:'CET'},
+  vienne:{i:'VIE',n:'Vienne',a:'Schwechat',tz:'CET'},vienna:{i:'VIE',n:'Vienne',a:'Schwechat',tz:'CET'},vie:{i:'VIE',n:'Vienne',a:'Schwechat',tz:'CET'},
+  bruxelles:{i:'BRU',n:'Bruxelles',a:'Zaventem',tz:'CET'},brussels:{i:'BRU',n:'Bruxelles',a:'Zaventem',tz:'CET'},bru:{i:'BRU',n:'Bruxelles',a:'Zaventem',tz:'CET'},
+  istanbul:{i:'IST',n:'Istanbul',a:'Airport',tz:'TRT'},ist:{i:'IST',n:'Istanbul',a:'Airport',tz:'TRT'},
+  athenes:{i:'ATH',n:'Athènes',a:'Eleftherios Venizelos',tz:'EET'},athens:{i:'ATH',n:'Athènes',a:'Eleftherios Venizelos',tz:'EET'},ath:{i:'ATH',n:'Athènes',a:'Eleftherios Venizelos',tz:'EET'},
+  'new york':{i:'JFK',n:'New York',a:'JFK',tz:'EST'},'new-york':{i:'JFK',n:'New York',a:'JFK',tz:'EST'},jfk:{i:'JFK',n:'New York',a:'JFK',tz:'EST'},
+  newark:{i:'EWR',n:'Newark',a:'Liberty',tz:'EST'},ewr:{i:'EWR',n:'Newark',a:'Liberty',tz:'EST'},
+  'los angeles':{i:'LAX',n:'Los Angeles',a:'LAX',tz:'PST'},'los-angeles':{i:'LAX',n:'Los Angeles',a:'LAX',tz:'PST'},lax:{i:'LAX',n:'Los Angeles',a:'LAX',tz:'PST'},
+  miami:{i:'MIA',n:'Miami',a:'International',tz:'EST'},mia:{i:'MIA',n:'Miami',a:'International',tz:'EST'},
+  chicago:{i:'ORD',n:'Chicago',a:"O'Hare",tz:'CST'},ord:{i:'ORD',n:'Chicago',a:"O'Hare",tz:'CST'},
+  'san francisco':{i:'SFO',n:'San Francisco',a:'SFO',tz:'PST'},sfo:{i:'SFO',n:'San Francisco',a:'SFO',tz:'PST'},
+  washington:{i:'IAD',n:'Washington',a:'Dulles',tz:'EST'},iad:{i:'IAD',n:'Washington',a:'Dulles',tz:'EST'},
+  montreal:{i:'YUL',n:'Montréal',a:'Trudeau',tz:'EST'},montréal:{i:'YUL',n:'Montréal',a:'Trudeau',tz:'EST'},yul:{i:'YUL',n:'Montréal',a:'Trudeau',tz:'EST'},
+  toronto:{i:'YYZ',n:'Toronto',a:'Pearson',tz:'EST'},yyz:{i:'YYZ',n:'Toronto',a:'Pearson',tz:'EST'},
+  vancouver:{i:'YVR',n:'Vancouver',a:'International',tz:'PST'},yvr:{i:'YVR',n:'Vancouver',a:'International',tz:'PST'},
+  mexico:{i:'MEX',n:'Mexico',a:'Benito Juárez',tz:'CST'},mex:{i:'MEX',n:'Mexico',a:'Benito Juárez',tz:'CST'},
+  bogota:{i:'BOG',n:'Bogotá',a:'El Dorado',tz:'COT'},bogotá:{i:'BOG',n:'Bogotá',a:'El Dorado',tz:'COT'},bog:{i:'BOG',n:'Bogotá',a:'El Dorado',tz:'COT'},
+  lima:{i:'LIM',n:'Lima',a:'Jorge Chávez',tz:'PET'},lim:{i:'LIM',n:'Lima',a:'Jorge Chávez',tz:'PET'},
+  'rio de janeiro':{i:'GIG',n:'Rio',a:'Galeão',tz:'BRT'},rio:{i:'GIG',n:'Rio',a:'Galeão',tz:'BRT'},gig:{i:'GIG',n:'Rio',a:'Galeão',tz:'BRT'},
+  'sao paulo':{i:'GRU',n:'São Paulo',a:'Guarulhos',tz:'BRT'},'são paulo':{i:'GRU',n:'São Paulo',a:'Guarulhos',tz:'BRT'},gru:{i:'GRU',n:'São Paulo',a:'Guarulhos',tz:'BRT'},
+  'buenos aires':{i:'EZE',n:'Buenos Aires',a:'Ezeiza',tz:'ART'},eze:{i:'EZE',n:'Buenos Aires',a:'Ezeiza',tz:'ART'},
+  santiago:{i:'SCL',n:'Santiago',a:'Arturo Merino',tz:'CLT'},scl:{i:'SCL',n:'Santiago',a:'Arturo Merino',tz:'CLT'},
+  tokyo:{i:'HND',n:'Tokyo',a:'Haneda',tz:'JST'},hnd:{i:'HND',n:'Tokyo',a:'Haneda',tz:'JST'},
+  nrt:{i:'NRT',n:'Tokyo',a:'Narita',tz:'JST'},
+  osaka:{i:'KIX',n:'Osaka',a:'Kansai',tz:'JST'},kix:{i:'KIX',n:'Osaka',a:'Kansai',tz:'JST'},
+  seoul:{i:'ICN',n:'Séoul',a:'Incheon',tz:'KST'},séoul:{i:'ICN',n:'Séoul',a:'Incheon',tz:'KST'},icn:{i:'ICN',n:'Séoul',a:'Incheon',tz:'KST'},
+  pekin:{i:'PEK',n:'Pékin',a:'Capital',tz:'CST'},beijing:{i:'PEK',n:'Pékin',a:'Capital',tz:'CST'},pek:{i:'PEK',n:'Pékin',a:'Capital',tz:'CST'},
+  shanghai:{i:'PVG',n:'Shanghai',a:'Pudong',tz:'CST'},pvg:{i:'PVG',n:'Shanghai',a:'Pudong',tz:'CST'},
+  'hong kong':{i:'HKG',n:'Hong Kong',a:'Chek Lap Kok',tz:'HKT'},hongkong:{i:'HKG',n:'Hong Kong',a:'Chek Lap Kok',tz:'HKT'},hkg:{i:'HKG',n:'Hong Kong',a:'Chek Lap Kok',tz:'HKT'},
+  singapour:{i:'SIN',n:'Singapour',a:'Changi',tz:'SGT'},singapore:{i:'SIN',n:'Singapour',a:'Changi',tz:'SGT'},sin:{i:'SIN',n:'Singapour',a:'Changi',tz:'SGT'},
+  bangkok:{i:'BKK',n:'Bangkok',a:'Suvarnabhumi',tz:'ICT'},bkk:{i:'BKK',n:'Bangkok',a:'Suvarnabhumi',tz:'ICT'},
+  mumbai:{i:'BOM',n:'Mumbai',a:'Chhatrapati Shivaji',tz:'IST'},bombay:{i:'BOM',n:'Mumbai',a:'Chhatrapati Shivaji',tz:'IST'},bom:{i:'BOM',n:'Mumbai',a:'Chhatrapati Shivaji',tz:'IST'},
+  delhi:{i:'DEL',n:'Delhi',a:'Indira Gandhi',tz:'IST'},'new delhi':{i:'DEL',n:'Delhi',a:'Indira Gandhi',tz:'IST'},del:{i:'DEL',n:'Delhi',a:'Indira Gandhi',tz:'IST'},
+  sydney:{i:'SYD',n:'Sydney',a:'Kingsford Smith',tz:'AEDT'},syd:{i:'SYD',n:'Sydney',a:'Kingsford Smith',tz:'AEDT'},
+  melbourne:{i:'MEL',n:'Melbourne',a:'Tullamarine',tz:'AEDT'},mel:{i:'MEL',n:'Melbourne',a:'Tullamarine',tz:'AEDT'},
+  dubai:{i:'DXB',n:'Dubai',a:'International',tz:'GST'},dxb:{i:'DXB',n:'Dubai',a:'International',tz:'GST'},
+  'abu dhabi':{i:'AUH',n:'Abu Dhabi',a:'International',tz:'GST'},auh:{i:'AUH',n:'Abu Dhabi',a:'International',tz:'GST'},
+  doha:{i:'DOH',n:'Doha',a:'Hamad',tz:'AST'},doh:{i:'DOH',n:'Doha',a:'Hamad',tz:'AST'},
+  casablanca:{i:'CMN',n:'Casablanca',a:'Mohammed V',tz:'WET'},cmn:{i:'CMN',n:'Casablanca',a:'Mohammed V',tz:'WET'},
+  johannesburg:{i:'JNB',n:'Johannesburg',a:'O.R. Tambo',tz:'SAST'},jnb:{i:'JNB',n:'Johannesburg',a:'O.R. Tambo',tz:'SAST'},
+  nairobi:{i:'NBO',n:'Nairobi',a:'Jomo Kenyatta',tz:'EAT'},nbo:{i:'NBO',n:'Nairobi',a:'Jomo Kenyatta',tz:'EAT'},
+  'addis abeba':{i:'ADD',n:'Addis-Abeba',a:'Bole',tz:'EAT'},add:{i:'ADD',n:'Addis-Abeba',a:'Bole',tz:'EAT'},
+  amman:{i:'AMM',n:'Amman',a:'Queen Alia',tz:'EET'},amm:{i:'AMM',n:'Amman',a:'Queen Alia',tz:'EET'},
+  caire:{i:'CAI',n:'Le Caire',a:'International',tz:'EET'},cairo:{i:'CAI',n:'Le Caire',a:'International',tz:'EET'},cai:{i:'CAI',n:'Le Caire',a:'International',tz:'EET'},
+  taipei:{i:'TPE',n:'Taipei',a:'Taoyuan',tz:'CST'},tpe:{i:'TPE',n:'Taipei',a:'Taoyuan',tz:'CST'},
+  'kuala lumpur':{i:'KUL',n:'Kuala Lumpur',a:'KLIA',tz:'MYT'},kul:{i:'KUL',n:'Kuala Lumpur',a:'KLIA',tz:'MYT'},
+  jakarta:{i:'CGK',n:'Jakarta',a:'Soekarno-Hatta',tz:'WIB'},cgk:{i:'CGK',n:'Jakarta',a:'Soekarno-Hatta',tz:'WIB'},
+  mascate:{i:'MCT',n:'Mascate',a:'International',tz:'GST'},muscat:{i:'MCT',n:'Mascate',a:'International',tz:'GST'},mct:{i:'MCT',n:'Mascate',a:'International',tz:'GST'},
+  bahrein:{i:'BAH',n:'Bahreïn',a:'International',tz:'AST'},bahrain:{i:'BAH',n:'Bahreïn',a:'International',tz:'AST'},bah:{i:'BAH',n:'Bahreïn',a:'International',tz:'AST'},
 };
 
-function normNum(raw) { return raw.replace(/^([A-Z]{1,3})0+(\d)/,'$1$2'); }
+// Airlines
+const AIRS={'air france':{c:'AF'},'airfrance':{c:'AF'},'easyjet':{c:'U2'},'easy jet':{c:'U2'},'british airways':{c:'BA'},'britishairways':{c:'BA'},'lufthansa':{c:'LH'},'ryanair':{c:'FR'},'transavia':{c:'TO'},'klm':{c:'KL'},'tap air portugal':{c:'TP'},'tap portugal':{c:'TP'},'vueling':{c:'VY'},'iberia':{c:'IB'},'emirates':{c:'EK'},'qatar airways':{c:'QR'},'turkish airlines':{c:'TK'},'turkish':{c:'TK'},'swiss':{c:'LX'},'american airlines':{c:'AA'},'delta':{c:'DL'},'united':{c:'UA'},'air canada':{c:'AC'},'singapore airlines':{c:'SQ'},'singapore':{c:'SQ'},'cathay pacific':{c:'CX'},'cathay':{c:'CX'},'ana':{c:'NH'},'jal':{c:'JL'},'korean air':{c:'KE'},'asiana':{c:'OZ'},'eva air':{c:'BR'},'malaysia airlines':{c:'MH'},'thai airways':{c:'TG'},'ethiopian':{c:'ET'},'oman air':{c:'WY'},'gulf air':{c:'GF'},'air india':{c:'AI'}};
+const KNOWN=['AF','BA','U2','LH','KL','TO','FR','TP','VY','IB','LX','TK','EK','QR','AA','DL','UA','AC','SQ','CX','NH','JL','VS','KE','OZ','BR','MH','TG','ET','MS','RJ','AI','WY','GF'];
 
-const AIRLINE_NAMES = {
-  'AF':'Air France','BA':'British Airways','U2':'easyJet','LH':'Lufthansa',
-  'KL':'KLM','TO':'Transavia','FR':'Ryanair','TP':'TAP Air Portugal',
-  'VY':'Vueling','IB':'Iberia','EK':'Emirates','QR':'Qatar Airways',
-  'TK':'Turkish Airlines','LX':'Swiss','AA':'American Airlines',
-  'DL':'Delta','UA':'United','AC':'Air Canada',
-};
-function airName(c) { return AIRLINE_NAMES[c] || c; }
-
-const AIRLINES = {
-  'air france':{code:'AF'},'airfrance':{code:'AF'},
-  'easyjet':{code:'U2'},'easy jet':{code:'U2'},
-  'british airways':{code:'BA'},'britishairways':{code:'BA'},
-  'lufthansa':{code:'LH'},'ryanair':{code:'FR'},
-  'transavia':{code:'TO'},'klm':{code:'KL'},
-  'tap air portugal':{code:'TP'},'tap portugal':{code:'TP'},
-  'vueling':{code:'VY'},'iberia':{code:'IB'},
-  'emirates':{code:'EK'},'qatar airways':{code:'QR'},
-  'turkish airlines':{code:'TK'},'turkish':{code:'TK'},
-  'swiss':{code:'LX'},'american airlines':{code:'AA'},
-  'delta':{code:'DL'},'united':{code:'UA'},'air canada':{code:'AC'},
-};
-
-const CITIES = {
-  'paris':{iata:'CDG',name:'Paris CDG',tz:'CET'},'cdg':{iata:'CDG',name:'Paris CDG',tz:'CET'},
-  'orly':{iata:'ORY',name:'Paris Orly',tz:'CET'},'ory':{iata:'ORY',name:'Paris Orly',tz:'CET'},
-  'marseille':{iata:'MRS',name:'Marseille',tz:'CET'},'mrs':{iata:'MRS',name:'Marseille',tz:'CET'},
-  'nice':{iata:'NCE',name:'Nice',tz:'CET'},'nce':{iata:'NCE',name:'Nice',tz:'CET'},
-  'lyon':{iata:'LYS',name:'Lyon',tz:'CET'},'lys':{iata:'LYS',name:'Lyon',tz:'CET'},
-  'bordeaux':{iata:'BOD',name:'Bordeaux',tz:'CET'},'bod':{iata:'BOD',name:'Bordeaux',tz:'CET'},
-  'toulouse':{iata:'TLS',name:'Toulouse',tz:'CET'},'tls':{iata:'TLS',name:'Toulouse',tz:'CET'},
-  'londres':{iata:'LHR',name:'Londres',tz:'GMT'},'london':{iata:'LHR',name:'Londres',tz:'GMT'},'lhr':{iata:'LHR',name:'Londres',tz:'GMT'},
-  'gatwick':{iata:'LGW',name:'Londres Gatwick',tz:'GMT'},'lgw':{iata:'LGW',name:'Londres Gatwick',tz:'GMT'},
-  'amsterdam':{iata:'AMS',name:'Amsterdam',tz:'CET'},'ams':{iata:'AMS',name:'Amsterdam',tz:'CET'},
-  'berlin':{iata:'BER',name:'Berlin',tz:'CET'},'ber':{iata:'BER',name:'Berlin',tz:'CET'},
-  'munich':{iata:'MUC',name:'Munich',tz:'CET'},'muc':{iata:'MUC',name:'Munich',tz:'CET'},
-  'francfort':{iata:'FRA',name:'Francfort',tz:'CET'},'frankfurt':{iata:'FRA',name:'Frankfurt',tz:'CET'},'fra':{iata:'FRA',name:'Frankfurt',tz:'CET'},
-  'madrid':{iata:'MAD',name:'Madrid',tz:'CET'},'mad':{iata:'MAD',name:'Madrid',tz:'CET'},
-  'barcelone':{iata:'BCN',name:'Barcelone',tz:'CET'},'barcelona':{iata:'BCN',name:'Barcelone',tz:'CET'},'bcn':{iata:'BCN',name:'Barcelone',tz:'CET'},
-  'rome':{iata:'FCO',name:'Rome',tz:'CET'},'roma':{iata:'FCO',name:'Rome',tz:'CET'},'fco':{iata:'FCO',name:'Rome',tz:'CET'},
-  'milan':{iata:'MXP',name:'Milan',tz:'CET'},'milano':{iata:'MXP',name:'Milan',tz:'CET'},'mxp':{iata:'MXP',name:'Milan',tz:'CET'},
-  'lisbonne':{iata:'LIS',name:'Lisbonne',tz:'WET'},'lisbon':{iata:'LIS',name:'Lisbonne',tz:'WET'},'lis':{iata:'LIS',name:'Lisbonne',tz:'WET'},
-  'zurich':{iata:'ZRH',name:'Zurich',tz:'CET'},'zrh':{iata:'ZRH',name:'Zurich',tz:'CET'},
-  'vienne':{iata:'VIE',name:'Vienne',tz:'CET'},'vienna':{iata:'VIE',name:'Vienne',tz:'CET'},'vie':{iata:'VIE',name:'Vienne',tz:'CET'},
-  'bruxelles':{iata:'BRU',name:'Bruxelles',tz:'CET'},'brussels':{iata:'BRU',name:'Bruxelles',tz:'CET'},'bru':{iata:'BRU',name:'Bruxelles',tz:'CET'},
-  'istanbul':{iata:'IST',name:'Istanbul',tz:'TRT'},'ist':{iata:'IST',name:'Istanbul',tz:'TRT'},
-  'new york':{iata:'JFK',name:'New York',tz:'EST'},'new-york':{iata:'JFK',name:'New York',tz:'EST'},'jfk':{iata:'JFK',name:'New York JFK',tz:'EST'},
-  'newark':{iata:'EWR',name:'Newark',tz:'EST'},'ewr':{iata:'EWR',name:'Newark',tz:'EST'},
-  'los angeles':{iata:'LAX',name:'Los Angeles',tz:'PST'},'lax':{iata:'LAX',name:'Los Angeles',tz:'PST'},
-  'miami':{iata:'MIA',name:'Miami',tz:'EST'},'mia':{iata:'MIA',name:'Miami',tz:'EST'},
-  'chicago':{iata:'ORD',name:'Chicago',tz:'CST'},'ord':{iata:'ORD',name:'Chicago',tz:'CST'},
-  'montreal':{iata:'YUL',name:'Montréal',tz:'EST'},'montréal':{iata:'YUL',name:'Montréal',tz:'EST'},'yul':{iata:'YUL',name:'Montréal',tz:'EST'},
-  'toronto':{iata:'YYZ',name:'Toronto',tz:'EST'},'yyz':{iata:'YYZ',name:'Toronto',tz:'EST'},
-  'rio de janeiro':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},'rio':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},'gig':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},
-  'sao paulo':{iata:'GRU',name:'São Paulo',tz:'BRT'},'são paulo':{iata:'GRU',name:'São Paulo',tz:'BRT'},'gru':{iata:'GRU',name:'São Paulo',tz:'BRT'},
-  'buenos aires':{iata:'EZE',name:'Buenos Aires',tz:'ART'},'eze':{iata:'EZE',name:'Buenos Aires',tz:'ART'},
-  'tokyo':{iata:'HND',name:'Tokyo Haneda',tz:'JST'},'hnd':{iata:'HND',name:'Tokyo Haneda',tz:'JST'},
-  'nrt':{iata:'NRT',name:'Tokyo Narita',tz:'JST'},
-  'seoul':{iata:'ICN',name:'Séoul',tz:'KST'},'séoul':{iata:'ICN',name:'Séoul',tz:'KST'},'icn':{iata:'ICN',name:'Séoul',tz:'KST'},
-  'pekin':{iata:'PEK',name:'Pékin',tz:'CST'},'beijing':{iata:'PEK',name:'Pékin',tz:'CST'},'pek':{iata:'PEK',name:'Pékin',tz:'CST'},
-  'shanghai':{iata:'PVG',name:'Shanghai',tz:'CST'},'pvg':{iata:'PVG',name:'Shanghai',tz:'CST'},
-  'hong kong':{iata:'HKG',name:'Hong Kong',tz:'HKT'},'hkg':{iata:'HKG',name:'Hong Kong',tz:'HKT'},
-  'singapour':{iata:'SIN',name:'Singapour',tz:'SGT'},'singapore':{iata:'SIN',name:'Singapour',tz:'SGT'},'sin':{iata:'SIN',name:'Singapour',tz:'SGT'},
-  'bangkok':{iata:'BKK',name:'Bangkok',tz:'ICT'},'bkk':{iata:'BKK',name:'Bangkok',tz:'ICT'},
-  'mumbai':{iata:'BOM',name:'Mumbai',tz:'IST'},'bombay':{iata:'BOM',name:'Mumbai',tz:'IST'},'bom':{iata:'BOM',name:'Mumbai',tz:'IST'},
-  'delhi':{iata:'DEL',name:'Delhi',tz:'IST'},'new delhi':{iata:'DEL',name:'Delhi',tz:'IST'},'del':{iata:'DEL',name:'Delhi',tz:'IST'},
-  'sydney':{iata:'SYD',name:'Sydney',tz:'AEDT'},'syd':{iata:'SYD',name:'Sydney',tz:'AEDT'},
-  'dubai':{iata:'DXB',name:'Dubai',tz:'GST'},'dxb':{iata:'DXB',name:'Dubai',tz:'GST'},
-  'doha':{iata:'DOH',name:'Doha',tz:'AST'},'doh':{iata:'DOH',name:'Doha',tz:'AST'},
-  'casablanca':{iata:'CMN',name:'Casablanca',tz:'WET'},'cmn':{iata:'CMN',name:'Casablanca',tz:'WET'},
-  'johannesburg':{iata:'JNB',name:'Johannesburg',tz:'SAST'},'jnb':{iata:'JNB',name:'Johannesburg',tz:'SAST'},
-  'nairobi':{iata:'NBO',name:'Nairobi',tz:'EAT'},'nbo':{iata:'NBO',name:'Nairobi',tz:'EAT'},
-};
-
-// ─── MOTEUR D'ANALYSE ───────────────────────────────────────────────────
-function analyzeQuery(q) {
-  const raw = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const knownCodes = ['AF','BA','U2','LH','KL','TO','FR','TP','VY','IB','LX','TK','EK','QR','AA','DL','UA','AC'];
-
-  // Étape 1 : numéro de vol
-  const fnm = q.match(/(?:^|[\s\-\(])([A-Z]{1,3})[\s]?(\d{1,5})(?=$|[\s\-\)])/i);
-  if (fnm) {
-    const code = fnm[1].toUpperCase(), num = fnm[2];
-    if (knownCodes.includes(code.substring(0,2)) || code.length === 2)
-      return { type:'specific', flightNum: code+num, query: q };
+// Analyze query
+function analyze(q){
+  const raw=q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const fm=q.match(/(?:^|[\s\-(])([A-Z]{1,3})\s?(\d{1,5})(?=$|[\s\-.,)])/i);
+  if(fm){const code=fm[1].toUpperCase(),num=fm[2];if(KNOWN.includes(code.substring(0,2))||code.length===2)return{type:'specific',fn:code+num,q}}
+  const found=[];
+  for(const m of [...q.matchAll(/\b([A-Z]{3})\b/g)]){const k=m[1].toLowerCase();if(C[k]&&!found.some(f=>f.i===C[k].i)){found.push(C[k]);if(found.length===2)break}}
+  for(const k of Object.keys(C).sort((a,b)=>b.length-a.length)){
+    if(k.length<=3)continue;
+    const re=new RegExp('(?<![a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])');
+    if(re.test(raw)){const c=C[k];if(!found.some(f=>f.i===c.i)){found.push(c);if(found.length===2)break}}
   }
-
-  // Étape 2 : codes IATA 3 lettres
-  const found = [];
-  for (const m of [...q.matchAll(/\b([A-Z]{3})\b/g)]) {
-    const k = m[1].toLowerCase();
-    if (CITIES[k] && !found.some(f=>f.iata===CITIES[k].iata)) { found.push(CITIES[k]); if(found.length===2) break; }
+  let airline=null;
+  for(const k of Object.keys(AIRS).sort((a,b)=>b.length-a.length)){
+    const m=k.length>=4?raw.includes(k):new RegExp('(?<![a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])').test(raw);
+    if(m){airline=AIRS[k];break}
   }
+  let t="aujourd'hui";if(raw.includes('demain'))t='demain';if(raw.includes('matin'))t+=' matin';else if(raw.includes('soir'))t+=' soir';
+  return{type:'search',airline,dep:found[0]||null,arr:found[1]||null,time:t,q};
+}
 
-  // Étape 3 : noms de villes
-  const ckeys = Object.keys(CITIES).sort((a,b)=>b.length-a.length);
-  for (const k of ckeys) {
-    if (k.length<=3) continue;
-    const re = new RegExp('(?<![a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])');
-    if (re.test(raw)) {
-      const c = CITIES[k];
-      if (!found.some(f=>f.iata===c.iata)) { found.push(c); if(found.length===2) break; }
+function buildResults(a){
+  const date=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  if(a.type==='specific'){
+    const raw=a.fn,norm=normN(raw),code=raw.match(/^([A-Z]{1,3})/)?.[1]||'',db=DB[norm];
+    if(db){
+      const dc=C[db.d.toLowerCase()]||{n:db.d,a:'',tz:''},ac=C[db.a.toLowerCase()]||{n:db.a,a:'',tz:''};
+      return[{num:raw,co:an(code),di:db.d,dn:dc.n,da:dc.a,ai:db.a,an2:ac.n,aa:ac.a,hd:db.hd,ha:db.ha,tz:db.tz,dur:db.dur,esc:'Direct',note:db.n,st:'Horaire habituel',dets:[{l:'Date',v:date},{l:'Terminal dép.',v:db.td||'—'},{l:'Terminal arr.',v:db.ta||'—'},{l:'Appareil',v:db.ap||'—'},{l:'Durée',v:db.dur||'—'}]}];
     }
+    return[{num:raw,co:an(code),di:'—',dn:'',da:'',ai:'—',an2:'',aa:'',hd:null,ha:null,tz:'',dur:null,esc:null,note:null,st:'Voir FlightAware',_fa:faU(raw),dets:[{l:'Date',v:date},{l:'Info',v:'Cliquez FlightAware',ok:true}]}];
   }
-
-  // Étape 4 : compagnie
-  let airline = null;
-  for (const key of Object.keys(AIRLINES).sort((a,b)=>b.length-a.length)) {
-    const matched = key.length>=4 ? raw.includes(key)
-      : new RegExp('(?<![a-z])'+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])').test(raw);
-    if (matched) { airline = AIRLINES[key]; break; }
-  }
-
-  let timeHint = "aujourd'hui";
-  if (raw.includes('demain')) timeHint = 'demain';
-  if (raw.includes('matin')) timeHint += ' matin';
-  else if (raw.includes('soir')) timeHint += ' soir';
-
-  return { type:'search', airline, dep:found[0]||null, arr:found[1]||null, timeHint, query:q };
-}
-
-function buildFlights(a) {
-  const date = new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-
-  if (a.type === 'specific') {
-    const raw = a.flightNum, norm = normNum(raw);
-    const code = raw.match(/^([A-Z]{1,3})/)?.[1]||'';
-    const db = FLIGHT_DB[norm];
-    if (db) {
-      const dc = CITIES[db.dep.toLowerCase()]||{name:db.dep,tz:''};
-      const ac = CITIES[db.arr.toLowerCase()]||{name:db.arr,tz:''};
-      return [{
-        num:raw, compagnie:airName(code),
-        dep_iata:db.dep, dep_name:dc.name,
-        arr_iata:db.arr, arr_name:ac.name,
-        hDep:db.hDep, hArr:db.hArr,
-        tzDep:db.tz_dep, tzArr:db.tz_arr,
-        dur:db.dur, escales:db.escales, statut:'Horaire habituel',
-        details:[
-          {l:'Date',v:date},
-          {l:'Terminal départ',v:db.terminal_dep||'—'},
-          {l:'Terminal arrivée',v:db.terminal_arr||'—'},
-          {l:'Appareil',v:db.appareil||'—'},
-          ...(db.note?[{l:'Note',v:db.note,warn:true}]:[]),
-        ]
-      }];
-    }
-    return [{
-      num:raw, compagnie:airName(code),
-      dep_iata:'—', dep_name:'',
-      arr_iata:'—', arr_name:'',
-      hDep:null, hArr:null, tzDep:'', tzArr:'',
-      dur:null, escales:null,
-      statut:'Voir FlightAware',
-      details:[{l:'Date',v:date},{l:'Info',v:'Cliquez FlightAware pour les horaires',ok:true}]
-    }];
-  }
-
-  const {airline, dep, arr, timeHint} = a;
-  const matches = Object.keys(FLIGHT_DB).filter(n=>{
-    const f=FLIGHT_DB[n];
-    return (!dep||f.dep===dep.iata) && (!arr||f.arr===arr.iata) && (!airline||n.startsWith(airline.code));
-  }).sort((a,b)=>parseInt(FLIGHT_DB[a].hDep)-parseInt(FLIGHT_DB[b].hDep)).slice(0,3);
-
-  if (matches.length) {
-    return matches.map(n=>{
-      const db=FLIGHT_DB[n], code=n.match(/^([A-Z]{1,3})/)?.[1]||'';
-      const dc=CITIES[db.dep.toLowerCase()]||{name:db.dep,tz:''};
-      const ac=CITIES[db.arr.toLowerCase()]||{name:db.arr,tz:''};
-      return {
-        num:n, compagnie:airName(code),
-        dep_iata:db.dep, dep_name:dc.name,
-        arr_iata:db.arr, arr_name:ac.name,
-        hDep:db.hDep, hArr:db.hArr,
-        tzDep:db.tz_dep, tzArr:db.tz_arr,
-        dur:db.dur, escales:db.escales, statut:'Horaire habituel',
-        details:[
-          {l:'Date',v:date},
-          {l:'Terminal dep.',v:db.terminal_dep||'—'},
-          {l:'Terminal arr.',v:db.terminal_arr||'—'},
-          {l:'Appareil',v:db.appareil||'—'},
-          ...(db.note?[{l:'Note',v:db.note,warn:true}]:[]),
-        ]
-      };
+  const{airline,dep,arr,time}=a;
+  const matches=Object.keys(DB).filter(n=>{const f=DB[n];return(!dep||f.d===dep.i)&&(!arr||f.a===arr.i)&&(!airline||n.startsWith(airline.c))}).sort((x,y)=>parseInt(DB[x].hd)-parseInt(DB[y].hd)).slice(0,3);
+  if(matches.length){
+    return matches.map(n=>{const db=DB[n],code=n.match(/^([A-Z]{1,3})/)?.[1]||'',dc=C[db.d.toLowerCase()]||{n:db.d,a:'',tz:''},ac=C[db.a.toLowerCase()]||{n:db.a,a:'',tz:''};
+      return{num:n,co:an(code),di:db.d,dn:dc.n,da:dc.a,ai:db.a,an2:ac.n,aa:ac.a,hd:db.hd,ha:db.ha,tz:db.tz,dur:db.dur,esc:'Direct',note:db.n,st:'Horaire habituel',dets:[{l:'Date',v:date},{l:'Terminal dép.',v:db.td||'—'},{l:'Terminal arr.',v:db.ta||'—'},{l:'Appareil',v:db.ap||'—'},{l:'Durée',v:db.dur||'—'}]};
     });
   }
-
-  const rFA = (dep&&arr)?`https://www.flightaware.com/live/findflight/?origin=${dep.iata}&destination=${arr.iata}`:'https://flightaware.com/live/findflight/';
-  return [{
-    num:'—', compagnie: airline?airName(airline.code):(dep&&arr?`${dep.iata}→${arr.iata}`:'Route'),
-    dep_iata:dep?.iata||'—', dep_name:dep?.name||'',
-    arr_iata:arr?.iata||'—', arr_name:arr?.name||'',
-    hDep:null, hArr:null, tzDep:dep?.tz||'', tzArr:arr?.tz||'',
-    dur:null, escales:null,
-    statut:'Voir FlightAware',
-    _routeFA:rFA,
-    details:[
-      {l:'Date',v:`${timeHint} · ${date}`},
-      ...(airline?[{l:'Compagnie',v:airName(airline.code)}]:[]),
-      {l:'Données',v:'Route non référencée en base',warn:true},
-    ]
-  }];
+  const rfa=(dep&&arr)?`https://www.flightaware.com/live/findflight/?origin=${dep.i}&destination=${arr.i}`:'https://flightaware.com/live/findflight/';
+  return[{num:'—',co:airline?an(airline.c):(dep&&arr?`${dep.i}→${arr.i}`:'Route'),di:dep?.i||'—',dn:dep?.n||'',da:dep?.a||'',ai:arr?.i||'—',an2:arr?.n||'',aa:arr?.a||'',hd:null,ha:null,tz:'',dur:null,esc:null,note:null,st:'Voir FlightAware',_fa:rfa,dets:[{l:'Date',v:`${time} · ${date}`},...(airline?[{l:'Compagnie',v:an(airline.c)}]:[]),{l:'Base locale',v:'Route non référencée',warn:true}]}];
 }
 
-// ─── RENDU CARTE ────────────────────────────────────────────────────────
-function renderCard(f, i) {
-  const sc = statusClass(f.statut);
-  const rFA = f._routeFA || faUrl(f.num);
-  const noData = f.hDep === null;
-  const numDisp = (!f.num||f.num==='—')
-    ? `<a href="${rFA}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:500">Voir sur FlightAware →</a>`
-    : f.num;
-
-  const timeDepHtml = noData
-    ? `<a class="time-fa-link" href="${rFA}" target="_blank">Voir horaires →</a>`
-    : `${f.hDep} <span class="ap-tz">${f.tzDep}</span>`;
-
-  const timeArrHtml = noData
-    ? `<a class="time-fa-link" href="${rFA}" target="_blank">Voir horaires →</a>`
-    : `${f.hArr} <span class="ap-tz">${f.tzArr}</span>`;
-
-  const dets = f.details?.length ? `<div class="fc-dets">${
-    f.details.map(d=>`<div><div class="det-lbl">${d.l}</div><div class="det-val${d.ok?' ok':d.warn?' warn':''}">${d.v}</div></div>`).join('')
-  }</div>` : '';
-
-  return `<div class="flight-card result-in" style="animation-delay:${i*80}ms">
-    <div class="fc-head">
-      <div class="fc-meta">
-        <span class="fc-num">${numDisp}</span>
-        <span class="fc-airline">${f.compagnie||''}</span>
-      </div>
-      <span class="badge ${sc}">${f.statut}</span>
-    </div>
+function renderCard(f,idx){
+  const bclass=bc(f.st),rfa=f._fa||faU(f.num),noData=f.hd===null;
+  const numH=(!f.num||f.num==='—')?`<a href="${rfa}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none">Voir FlightAware →</a>`:f.num;
+  const[tzd,tza]=(f.tz||'/').split('/');
+  const hDH=noData?`<a class="tlink" href="${rfa}" target="_blank">Voir horaires →</a>`:`${f.hd} <span class="ap-tz">${tzd||''}</span>`;
+  const hAH=noData?`<a class="tlink" href="${rfa}" target="_blank">Voir horaires →</a>`:`${f.ha} <span class="ap-tz">${tza||''}</span>`;
+  const dets=f.dets?.length?`<div class="fc-dets">${f.dets.map(d=>`<div><div class="dl">${d.l}</div><div class="dv${d.ok?' ok':d.warn?' warn':''}">${d.v}</div></div>`).join('')}</div>`:'';
+  return`<div class="fc" style="animation-delay:${idx*90}ms">
+    <div class="fc-head"><div class="fc-left"><span class="fc-num">${numH}</span><span class="fc-co">${f.co||''}</span></div><span class="badge ${bclass}">${f.st}</span></div>
     <div class="fc-route">
-      <div class="ap">
-        <div class="ap-code">${f.dep_iata}</div>
-        <div class="ap-city">${f.dep_name}</div>
-        <div class="ap-time">${timeDepHtml}</div>
-      </div>
-      <div class="mid">
-        <div class="mid-dur">${f.dur||'—'}</div>
-        <div class="route-bar"><span class="fly">✈</span></div>
-        <div class="mid-stops">${f.escales||'—'}</div>
-      </div>
-      <div class="ap r">
-        <div class="ap-code">${f.arr_iata}</div>
-        <div class="ap-city">${f.arr_name}</div>
-        <div class="ap-time">${timeArrHtml}</div>
-      </div>
+      <div class="ap"><div class="ap-code">${f.di}</div><div class="ap-city">${f.dn}</div><div class="ap-ap">${f.da}</div><div class="ap-time">${hDH}</div></div>
+      <div class="mid"><div class="mdur">${f.dur||'—'}</div><div class="rbar"><span class="fly">✈</span></div><div class="mstop">${f.esc||'—'}</div></div>
+      <div class="ap r"><div class="ap-code">${f.ai}</div><div class="ap-city">${f.an2}</div><div class="ap-ap">${f.aa}</div><div class="ap-time">${hAH}${f.note?`<div style="font-size:10px;color:var(--gold);margin-top:3px">${f.note}</div>`:''}</div></div>
     </div>
     ${dets}
-    <div class="fc-links">
-      <a class="lbtn lprim" href="${rFA}" target="_blank">FlightAware</a>
-      <a class="lbtn" href="${fr24Url(f.num)}" target="_blank">FlightRadar24</a>
-      <a class="lbtn" href="${gUrl(f.num!=='—'?f.num:'',f.dep_iata!=='—'?f.dep_iata:'',f.arr_iata!=='—'?f.arr_iata:'')}" target="_blank">Google</a>
-    </div>
+    <div class="fc-links"><a class="lb p" href="${rfa}" target="_blank">FlightAware</a><a class="lb" href="${fr24(f.num)}" target="_blank">FR24</a><a class="lb" href="${goo(f.num!=='—'?f.num:'',f.di!=='—'?f.di:'',f.ai!=='—'?f.ai:'')}" target="_blank">Google</a></div>
   </div>`;
 }
 
-// ─── RECHERCHE PRINCIPALE ───────────────────────────────────────────────
-const steps = ['Analyse de votre demande…','Identification du vol…','Liens FlightAware…','Génération de la fiche…'];
+const STEPS=['Analyse de votre demande…','Identification du vol…','Recherche dans la base…','Génération de la fiche…'];
 
-async function doSearch() {
-  const q = (document.getElementById('query').value||'').trim();
-  if (!q) return;
-
-  const btn = document.getElementById('searchBtn');
-  const out  = document.getElementById('out');
-  const load = document.getElementById('loading');
-  const ltxt = document.getElementById('loadingTxt');
-
-  btn.disabled = true;
-  out.innerHTML = '';
-  load.classList.add('active');
-
-  for (let i=0; i<steps.length; i++) {
-    ltxt.textContent = steps[i];
-    await new Promise(r=>setTimeout(r,350));
-  }
-
-  const analysis = analyzeQuery(q);
-  const flights  = buildFlights(analysis);
-  load.classList.remove('active');
-
-  let html = '';
-
-  // Info box
-  const {dep, arr, airline, type, flightNum} = analysis;
-  let info = '';
-  if (type==='specific') {
-    const inDB = !!FLIGHT_DB[normNum(flightNum)];
-    info = inDB
-      ? `Vol <b>${flightNum}</b> trouvé — horaire habituel. Cliquez <b>FlightAware</b> pour le statut du jour.`
-      : `Vol <b>${flightNum}</b> — non référencé en base. Cliquez <b>FlightAware</b> pour les données en direct.`;
-  } else {
-    const parts = [];
-    if (airline) parts.push(`<b>${airName(airline.code)}</b>`);
-    if (dep) parts.push(`depuis <b>${dep.name}</b>`);
-    if (arr) parts.push(`vers <b>${arr.name}</b>`);
-    info = parts.length ? `J'ai compris : ${parts.join(', ')}.` : `Recherche : <b>${q}</b>.`;
-  }
-
-  html += `<div class="info-card result-in">
-    ${info}
-    <div class="warn-note">⚠ Horaires indicatifs — vérifiez sur FlightAware</div>
-  </div>`;
-
-  // Bouton route FA
-  if (type==='search' && dep && arr) {
-    const rUrl = `https://www.flightaware.com/live/findflight/?origin=${dep.iata}&destination=${arr.iata}`;
-    html += `<a class="route-btn result-in" style="animation-delay:60ms" href="${rUrl}" target="_blank">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-      Voir tous les vols ${dep.iata} → ${arr.iata} sur FlightAware
-    </a>`;
-  }
-
-  flights.forEach((f,i) => { html += renderCard(f, i+1); });
-
-  html += `<div class="conseil result-in" style="animation-delay:${(flights.length+1)*80}ms">
-    <b>Conseil :</b> FlightAware et FlightRadar24 donnent le statut exact du vol, la porte d'embarquement et la position en direct. Cliquez sur le bouton <b>FlightAware</b> dans la fiche ci-dessus.
-  </div>`;
-
-  out.innerHTML = html;
-
-  // Scroll vers résultats
-  document.getElementById('scrollArea').scrollTo({ top: document.getElementById('chipsWrap').offsetTop, behavior: 'smooth' });
-
-  btn.disabled = false;
+async function go(){
+  const q=(document.getElementById('q').value||'').trim();
+  if(!q)return;
+  const btn=document.getElementById('btn'),out=document.getElementById('out'),ldr=document.getElementById('ldr'),lst=document.getElementById('lst');
+  btn.disabled=true;out.innerHTML='';ldr.classList.add('on');
+  for(let i=0;i<STEPS.length;i++){lst.style.opacity='0';await new Promise(r=>setTimeout(r,100));lst.textContent=STEPS[i];lst.style.opacity='1';await new Promise(r=>setTimeout(r,380))}
+  const a=analyze(q),results=buildResults(a);
+  ldr.classList.remove('on');
+  // Context
+  let ctx='';
+  if(a.type==='specific'){const inDB=!!DB[normN(a.fn)];ctx=inDB?`Vol <b>${a.fn}</b> trouvé — horaire habituel. Cliquez <b>FlightAware</b> pour le statut du jour.`:`Vol <b>${a.fn}</b> non référencé. Cliquez <b>FlightAware</b> pour les données en direct.`}
+  else{const p=[];if(a.airline)p.push(`<b>${an(a.airline.c)}</b>`);if(a.dep)p.push(`depuis <b>${a.dep.n}</b>`);if(a.arr)p.push(`vers <b>${a.arr.n}</b>`);ctx=p.length?`Recherche : ${p.join(', ')}.`:`<b>${a.q}</b>`}
+  let html=`<div class="ctx">${ctx}<div class="wtag">⚠ Horaires habituels — vérifiez sur FlightAware</div></div>`;
+  if(a.type==='search'&&a.dep&&a.arr){const ru=`https://www.flightaware.com/live/findflight/?origin=${a.dep.i}&destination=${a.arr.i}`;html+=`<a class="rbtn" href="${ru}" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Voir tous les vols ${a.dep.i}→${a.arr.i} sur FlightAware</a>`}
+  results.forEach((f,i)=>{html+=renderCard(f,i)});
+  html+=`<div class="conseil" style="animation-delay:${(results.length+1)*90}ms"><b>Conseil :</b> Cliquez <b>FlightAware</b> pour le statut en direct, la porte d'embarquement et la position de l'avion sur la carte.</div>`;
+  out.innerHTML=html;
+  setTimeout(()=>document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'}),100);
+  btn.disabled=false;
 }
 
-document.getElementById('query').addEventListener('keydown', e => {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }
-});
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();go()}});
 </script>
 </body>
 </html>
