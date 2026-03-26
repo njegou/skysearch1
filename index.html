@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>SkySearch</title>
+
+<!-- PWA Meta Tags iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SkySearch">
+<meta name="theme-color" content="#0c0e14">
+<link rel="manifest" href="manifest.json">
+
+<!-- iOS Icons -->
+<link rel="apple-touch-icon" href="icon-192.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.svg">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --ink: #0c0e14;
+  --surface: #f5f4f1;
+  --white: #ffffff;
+  --card: #ffffff;
+  --accent: #1a3fff;
+  --accent-light: #e8edff;
+  --gold: #d97706;
+  --gold-light: #fffbeb;
+  --green: #059669;
+  --green-light: #ecfdf5;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --border: rgba(12,14,20,0.09);
+  --border-mid: rgba(12,14,20,0.15);
+  --muted: #64748b;
+  --subtle: #94a3b8;
+  --r: 16px;
+  --rsm: 12px;
+
+  /* iPhone safe areas */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── APP SHELL ─────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── STATUS BAR AREA ─────────────────────────── */
+.status-fill {
+  background: var(--ink);
+  height: var(--sat);
+  flex-shrink: 0;
+}
+
+/* ── TOP NAV ─────────────────────────────── */
+.topnav {
+  background: var(--ink);
+  padding: 14px 20px 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.nav-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.nav-live {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: blink 1.6s ease-in-out infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── SCROLL AREA ─────────────────────────────── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── SEARCH SECTION ─────────────────────────────── */
+.search-section {
+  padding: 16px 16px 0;
+}
+
+.search-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(12,14,20,0.06);
+}
+
+.search-inner { padding: 16px 16px 12px; }
+
+.search-lbl {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--subtle);
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  margin-bottom: 10px;
+}
+
+textarea#query {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rsm);
+  padding: 13px 14px;
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px; /* Empêche le zoom iOS */
+  font-weight: 300;
+  color: var(--ink);
+  resize: none;
+  height: 80px;
+  line-height: 1.5;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color .2s;
+}
+
+textarea#query::placeholder { color: #b0bec5; }
+textarea#query:focus { border-color: var(--accent); background: white; }
+
+.search-btn {
+  width: 100%;
+  background: var(--ink);
+  color: white;
+  border: none;
+  border-radius: var(--rsm);
+  height: 50px;
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 10px;
+  -webkit-appearance: none;
+  transition: background .15s, transform .1s;
+  letter-spacing: .01em;
+}
+
+.search-btn:active { background: var(--accent); transform: scale(.98); }
+.search-btn:disabled { background: #c5c8d0; }
+
+/* ── CHIPS ─────────────────────────────── */
+.chips-wrap {
+  padding: 10px 16px 0;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.chips-wrap::-webkit-scrollbar { display: none; }
+
+.chip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .15s;
+  -webkit-appearance: none;
+}
+
+.chip:active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── RESULTS ─────────────────────────────── */
+.results-area {
+  padding: 14px 16px;
+}
+
+/* Loading */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 48px 0;
+}
+
+.loading.active { display: block; }
+
+.spin-ring {
+  width: 44px; height: 44px;
+  border: 2.5px solid var(--border-mid);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-txt { font-size: 13px; color: var(--muted); }
+
+/* Cards */
+.result-in { animation: slideUp .3s ease both; }
+
+@keyframes slideUp {
+  from { opacity:0; transform: translateY(10px); }
+  to   { opacity:1; transform: none; }
+}
+
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.info-card b { color: var(--ink); font-weight: 500; }
+
+.warn-note {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.flight-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 12px rgba(12,14,20,0.05);
+}
+
+/* Card header */
+.fc-head {
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fc-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.fc-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  letter-spacing: -.3px;
+  color: var(--ink);
+}
+
+.fc-airline {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 3px 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 20px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.bon  { background: var(--green-light); color: var(--green); }
+.bde  { background: var(--gold-light);  color: var(--gold); }
+.ban  { background: var(--red-light);   color: var(--red); }
+.bla  { background: var(--accent-light);color: var(--accent); }
+.bdf  { background: var(--surface);     color: var(--muted); }
+
+/* Route */
+.fc-route {
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.ap { flex: 1; }
+.ap.r { text-align: right; }
+
+.ap-code {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.ap-city { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ap-name { font-size: 10px; color: var(--subtle); }
+
+.ap-time {
+  font-size: 17px;
+  font-weight: 500;
+  margin-top: 10px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ap-tz {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--subtle);
+}
+
+.time-fa-link {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  display: block;
+  margin-top: 8px;
+}
+
+.mid {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.mid-dur { font-size: 10px; color: var(--subtle); }
+
+.route-bar {
+  width: 70px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+  position: relative;
+}
+
+.fly {
+  position: absolute;
+  top: -8px;
+  font-size: 13px;
+  animation: fly 3s linear infinite;
+}
+
+@keyframes fly {
+  from { left: -4px; opacity:0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  to   { left: 65px; opacity:0; }
+}
+
+.mid-stops { font-size: 10px; color: var(--subtle); }
+
+/* Details grid */
+.fc-dets {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.det-lbl { font-size: 9px; color: var(--subtle); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
+.det-val { font-size: 12px; font-weight: 500; color: var(--ink); }
+.det-val.ok   { color: var(--green); }
+.det-val.warn { color: var(--gold); }
+
+/* Links */
+.fc-links {
+  border-top: 1px solid var(--border);
+  padding: 11px 16px;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.fc-links::-webkit-scrollbar { display: none; }
+
+.lbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-appearance: none;
+}
+
+.lbtn:active { background: var(--surface); }
+.lprim { background: var(--ink); border-color: transparent; color: white; }
+.lprim:active { background: var(--accent); }
+
+/* Route button */
+.route-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--rsm);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.route-btn:active { opacity: .85; }
+
+.conseil {
+  background: var(--accent-light);
+  border: 1px solid rgba(26,63,255,.1);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--accent);
+  line-height: 1.65;
+}
+
+.conseil b { font-weight: 500; }
+
+/* ── BOTTOM SAFE AREA ─────────────────────────────── */
+.bottom-fill {
+  height: var(--sab);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+/* ── INSTALL BANNER (iOS hint) ─────────────────────────────── */
+.install-banner {
+  background: var(--ink);
+  color: rgba(255,255,255,.8);
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 11px;
+  line-height: 1.5;
+  display: none;
+  flex-shrink: 0;
+}
+
+.install-banner.show { display: block; }
+.install-banner b { color: white; }
+.install-banner .close-btn { float: right; cursor: pointer; opacity: .6; font-size: 16px; margin-top: -2px; }
+
+/* Empty / error states */
+.empty { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 14px; }
+.err { background: var(--red-light); border-radius: var(--rsm); padding: 13px 16px; font-size: 13px; color: var(--red); margin-bottom: 12px; }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Status bar spacer -->
+  <div class="status-fill"></div>
+
+  <!-- Top nav -->
+  <div class="topnav">
+    <div class="nav-logo">
+      <div class="nav-icon">✈</div>
+      <span class="nav-title">SkySearch</span>
+    </div>
+    <div class="nav-live"><span class="live-dot"></span>Vols temps réel</div>
+  </div>
+
+  <!-- Install hint (iOS Safari) -->
+  <div class="install-banner" id="installBanner">
+    <span class="close-btn" onclick="dismissBanner()">✕</span>
+    Installez SkySearch : appuyez sur <b>⎋ Partager</b> puis <b>« Sur l'écran d'accueil »</b>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="scroll-area" id="scrollArea">
+
+    <!-- Search -->
+    <div class="search-section">
+      <div class="search-card">
+        <div class="search-inner">
+          <div class="search-lbl">Décrivez le vol que vous cherchez</div>
+          <textarea id="query" placeholder='Ex : « AF6 », « Vol Paris New York ce soir », « Mon mari rentre de Tokyo demain »…' autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+          <button class="search-btn" id="searchBtn" onclick="doSearch()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Rechercher
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chips -->
+    <div class="chips-wrap" id="chipsWrap">
+      <span class="chip" onclick="fill('AF6')">AF6 · Paris → NY</span>
+      <span class="chip" onclick="fill('BA303')">BA303</span>
+      <span class="chip" onclick="fill('Vol Paris Tokyo ce soir')">Paris → Tokyo</span>
+      <span class="chip" onclick="fill('Mon mari rentre de Mumbai demain')">Mumbai → Paris</span>
+      <span class="chip" onclick="fill('easyJet Paris Barcelone')">easyJet BCN</span>
+      <span class="chip" onclick="fill('Vol CDG Londres ce matin')">CDG → LHR</span>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area">
+      <div class="loading" id="loading">
+        <div class="spin-ring"></div>
+        <div class="loading-txt" id="loadingTxt">Analyse en cours…</div>
+      </div>
+      <div id="out"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom safe area -->
+  <div class="bottom-fill"></div>
+</div>
+
+<script>
+// ─── SERVICE WORKER ─────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// ─── INSTALL BANNER (iOS uniquement, hors standalone) ───────────────────
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isStandalone() { return window.navigator.standalone === true; }
+function dismissBanner() {
+  document.getElementById('installBanner').classList.remove('show');
+  localStorage.setItem('ss_banner', '1');
+}
+if (isIOS() && !isStandalone() && !localStorage.getItem('ss_banner')) {
+  document.getElementById('installBanner').classList.add('show');
+}
+
+// ─── UTILITAIRES ────────────────────────────────────────────────────────
+function fill(t) {
+  document.getElementById('query').value = t;
+  document.getElementById('query').focus();
+}
+
+function statusClass(s) {
+  if (!s) return 'bdf';
+  const l = s.toLowerCase();
+  if (l.includes('heure') || l.includes('prévu') || l.includes('habituel')) return 'bon';
+  if (l.includes('retard') || l.includes('delay'))   return 'bde';
+  if (l.includes('annul') || l.includes('cancel'))   return 'ban';
+  if (l.includes('atterri') || l.includes('landed')) return 'bla';
+  if (l.includes('consulter') || l.includes('vérifier')) return 'bdf';
+  return 'bdf';
+}
+
+const IATA_TO_ICAO = {
+  'AF':'AFR','BA':'BAW','U2':'EZY','LH':'DLH','KL':'KLM',
+  'TO':'TVF','FR':'RYR','TP':'TAP','VY':'VLG','IB':'IBE',
+  'AZ':'AZA','LX':'SWR','SK':'SAS','TK':'THY','EK':'UAE',
+  'QR':'QTR','AA':'AAL','DL':'DAL','UA':'UAL','AC':'ACA',
+};
+
+function faUrl(num) {
+  if (!num || num === '—') return 'https://flightaware.com/live/findflight/';
+  const c = num.replace(/\s/g,'');
+  const code = c.match(/^([A-Z]{2,3})/)?.[1] || '';
+  const n = c.replace(/^[A-Z]{2,3}0*/,'');
+  return `https://flightaware.com/live/flight/${IATA_TO_ICAO[code]||code}${n}`;
+}
+
+function fr24Url(num) {
+  if (!num || num === '—') return 'https://www.flightradar24.com';
+  return `https://www.flightradar24.com/data/flights/${num.replace(/\s/g,'').toLowerCase().replace(/^([a-z]{2,3})0+(\d)/,'$1$2')}`;
+}
+
+function gUrl(num, dep, arr) {
+  return `https://www.google.com/search?q=${encodeURIComponent([num,dep,arr].filter(Boolean).join(' ')+' vol statut')}`;
+}
+
+// ─── BASE DE DONNÉES ─────────────────────────────────────────────────────
+const FLIGHT_DB = {
+  'AF6':   {dep:'CDG',arr:'JFK',hDep:'13h30',hArr:'15h55',tz_dep:'CET',tz_arr:'EST',dur:'9h25',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1'},
+  'AF8':   {dep:'CDG',arr:'JFK',hDep:'10h35',hArr:'13h05',tz_dep:'CET',tz_arr:'EST',dur:'9h30',escales:'Direct',appareil:'Airbus A350-900',terminal_dep:'2E',terminal_arr:'1'},
+  'AF10':  {dep:'CDG',arr:'LAX',hDep:'13h35',hArr:'16h05',tz_dep:'CET',tz_arr:'PST',dur:'11h30',escales:'Direct',appareil:'Boeing 777-200ER',terminal_dep:'2E',terminal_arr:'B'},
+  'AF12':  {dep:'CDG',arr:'MIA',hDep:'10h40',hArr:'14h25',tz_dep:'CET',tz_arr:'EST',dur:'10h45',escales:'Direct',appareil:'Boeing 777-200ER',terminal_dep:'2E',terminal_arr:'E'},
+  'AF66':  {dep:'CDG',arr:'NRT',hDep:'12h55',hArr:'08h10',tz_dep:'CET',tz_arr:'JST',dur:'13h15',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1',note:'+1 jour'},
+  'AF264': {dep:'CDG',arr:'HND',hDep:'13h25',hArr:'09h00',tz_dep:'CET',tz_arr:'JST',dur:'13h35',escales:'Direct',appareil:'Airbus A350-900',terminal_dep:'2E',terminal_arr:'3',note:'+1 jour'},
+  'AF160': {dep:'CDG',arr:'YUL',hDep:'10h30',hArr:'12h05',tz_dep:'CET',tz_arr:'EST',dur:'8h35',escales:'Direct',appareil:'Airbus A330-200',terminal_dep:'2E',terminal_arr:'1'},
+  'AF678': {dep:'CDG',arr:'DXB',hDep:'09h55',hArr:'19h00',tz_dep:'CET',tz_arr:'GST',dur:'6h05',escales:'Direct',appareil:'Boeing 777-300ER',terminal_dep:'2E',terminal_arr:'1'},
+  'AF1380':{dep:'CDG',arr:'MRS',hDep:'07h15',hArr:'08h35',tz_dep:'CET',tz_arr:'CET',dur:'1h20',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
+  'AF1780':{dep:'CDG',arr:'NCE',hDep:'07h10',hArr:'08h35',tz_dep:'CET',tz_arr:'CET',dur:'1h25',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
+  'AF1080':{dep:'CDG',arr:'BCN',hDep:'07h05',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'1'},
+  'AF1182':{dep:'CDG',arr:'MAD',hDep:'07h00',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h05',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'2'},
+  'AF1680':{dep:'CDG',arr:'FCO',hDep:'07h20',hArr:'09h20',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2F',terminal_arr:'1'},
+  'AF1640':{dep:'CDG',arr:'LIS',hDep:'07h10',hArr:'08h50',tz_dep:'CET',tz_arr:'WET',dur:'2h40',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'1'},
+  'AF1230':{dep:'CDG',arr:'LHR',hDep:'07h30',hArr:'07h45',tz_dep:'CET',tz_arr:'GMT',dur:'1h15',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'4'},
+  'AF1300':{dep:'CDG',arr:'AMS',hDep:'07h05',hArr:'08h15',tz_dep:'CET',tz_arr:'CET',dur:'1h10',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2F',terminal_arr:'2'},
+  'BA303': {dep:'LHR',arr:'CDG',hDep:'08h00',hArr:'10h15',tz_dep:'GMT',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Airbus A319',terminal_dep:'5',terminal_arr:'2C'},
+  'BA304': {dep:'CDG',arr:'LHR',hDep:'11h00',hArr:'11h10',tz_dep:'CET',tz_arr:'GMT',dur:'1h10',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2C',terminal_arr:'5'},
+  'BA177': {dep:'LHR',arr:'JFK',hDep:'11h30',hArr:'14h20',tz_dep:'GMT',tz_arr:'EST',dur:'7h50',escales:'Direct',appareil:'Boeing 777-200',terminal_dep:'5',terminal_arr:'7'},
+  'BA178': {dep:'JFK',arr:'LHR',hDep:'19h30',hArr:'07h35',tz_dep:'EST',tz_arr:'GMT',dur:'7h05',escales:'Direct',appareil:'Boeing 777-200',terminal_dep:'7',terminal_arr:'5',note:'+1 jour'},
+  'U24542':{dep:'CDG',arr:'LGW',hDep:'06h45',hArr:'07h00',tz_dep:'CET',tz_arr:'GMT',dur:'1h15',escales:'Direct',appareil:'Airbus A320neo',terminal_dep:'2',terminal_arr:'N'},
+  'U22020':{dep:'CDG',arr:'BCN',hDep:'07h10',hArr:'09h10',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Airbus A319',terminal_dep:'2',terminal_arr:'B'},
+  'U28730':{dep:'CDG',arr:'MRS',hDep:'07h30',hArr:'08h45',tz_dep:'CET',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2',terminal_arr:'1'},
+  'TO5166':{dep:'ORY',arr:'BCN',hDep:'07h00',hArr:'09h00',tz_dep:'CET',tz_arr:'CET',dur:'2h00',escales:'Direct',appareil:'Boeing 737-800',terminal_dep:'1',terminal_arr:'2'},
+  'TO5522':{dep:'ORY',arr:'MRS',hDep:'07h45',hArr:'09h00',tz_dep:'CET',tz_arr:'CET',dur:'1h15',escales:'Direct',appareil:'Boeing 737-700',terminal_dep:'1',terminal_arr:'1'},
+  'LH1040':{dep:'MUC',arr:'CDG',hDep:'06h55',hArr:'09h05',tz_dep:'CET',tz_arr:'CET',dur:'2h10',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2',terminal_arr:'2C'},
+  'LH1041':{dep:'CDG',arr:'MUC',hDep:'07h10',hArr:'09h25',tz_dep:'CET',tz_arr:'CET',dur:'2h15',escales:'Direct',appareil:'Airbus A320',terminal_dep:'2C',terminal_arr:'2'},
+  'KL1234':{dep:'AMS',arr:'CDG',hDep:'07h05',hArr:'08h45',tz_dep:'CET',tz_arr:'CET',dur:'1h40',escales:'Direct',appareil:'Embraer E175',terminal_dep:'1',terminal_arr:'2C'},
+  'KL1235':{dep:'CDG',arr:'AMS',hDep:'09h35',hArr:'11h20',tz_dep:'CET',tz_arr:'CET',dur:'1h45',escales:'Direct',appareil:'Embraer E175',terminal_dep:'2C',terminal_arr:'1'},
+};
+
+function normNum(raw) { return raw.replace(/^([A-Z]{1,3})0+(\d)/,'$1$2'); }
+
+const AIRLINE_NAMES = {
+  'AF':'Air France','BA':'British Airways','U2':'easyJet','LH':'Lufthansa',
+  'KL':'KLM','TO':'Transavia','FR':'Ryanair','TP':'TAP Air Portugal',
+  'VY':'Vueling','IB':'Iberia','EK':'Emirates','QR':'Qatar Airways',
+  'TK':'Turkish Airlines','LX':'Swiss','AA':'American Airlines',
+  'DL':'Delta','UA':'United','AC':'Air Canada',
+};
+function airName(c) { return AIRLINE_NAMES[c] || c; }
+
+const AIRLINES = {
+  'air france':{code:'AF'},'airfrance':{code:'AF'},
+  'easyjet':{code:'U2'},'easy jet':{code:'U2'},
+  'british airways':{code:'BA'},'britishairways':{code:'BA'},
+  'lufthansa':{code:'LH'},'ryanair':{code:'FR'},
+  'transavia':{code:'TO'},'klm':{code:'KL'},
+  'tap air portugal':{code:'TP'},'tap portugal':{code:'TP'},
+  'vueling':{code:'VY'},'iberia':{code:'IB'},
+  'emirates':{code:'EK'},'qatar airways':{code:'QR'},
+  'turkish airlines':{code:'TK'},'turkish':{code:'TK'},
+  'swiss':{code:'LX'},'american airlines':{code:'AA'},
+  'delta':{code:'DL'},'united':{code:'UA'},'air canada':{code:'AC'},
+};
+
+const CITIES = {
+  'paris':{iata:'CDG',name:'Paris CDG',tz:'CET'},'cdg':{iata:'CDG',name:'Paris CDG',tz:'CET'},
+  'orly':{iata:'ORY',name:'Paris Orly',tz:'CET'},'ory':{iata:'ORY',name:'Paris Orly',tz:'CET'},
+  'marseille':{iata:'MRS',name:'Marseille',tz:'CET'},'mrs':{iata:'MRS',name:'Marseille',tz:'CET'},
+  'nice':{iata:'NCE',name:'Nice',tz:'CET'},'nce':{iata:'NCE',name:'Nice',tz:'CET'},
+  'lyon':{iata:'LYS',name:'Lyon',tz:'CET'},'lys':{iata:'LYS',name:'Lyon',tz:'CET'},
+  'bordeaux':{iata:'BOD',name:'Bordeaux',tz:'CET'},'bod':{iata:'BOD',name:'Bordeaux',tz:'CET'},
+  'toulouse':{iata:'TLS',name:'Toulouse',tz:'CET'},'tls':{iata:'TLS',name:'Toulouse',tz:'CET'},
+  'londres':{iata:'LHR',name:'Londres',tz:'GMT'},'london':{iata:'LHR',name:'Londres',tz:'GMT'},'lhr':{iata:'LHR',name:'Londres',tz:'GMT'},
+  'gatwick':{iata:'LGW',name:'Londres Gatwick',tz:'GMT'},'lgw':{iata:'LGW',name:'Londres Gatwick',tz:'GMT'},
+  'amsterdam':{iata:'AMS',name:'Amsterdam',tz:'CET'},'ams':{iata:'AMS',name:'Amsterdam',tz:'CET'},
+  'berlin':{iata:'BER',name:'Berlin',tz:'CET'},'ber':{iata:'BER',name:'Berlin',tz:'CET'},
+  'munich':{iata:'MUC',name:'Munich',tz:'CET'},'muc':{iata:'MUC',name:'Munich',tz:'CET'},
+  'francfort':{iata:'FRA',name:'Francfort',tz:'CET'},'frankfurt':{iata:'FRA',name:'Frankfurt',tz:'CET'},'fra':{iata:'FRA',name:'Frankfurt',tz:'CET'},
+  'madrid':{iata:'MAD',name:'Madrid',tz:'CET'},'mad':{iata:'MAD',name:'Madrid',tz:'CET'},
+  'barcelone':{iata:'BCN',name:'Barcelone',tz:'CET'},'barcelona':{iata:'BCN',name:'Barcelone',tz:'CET'},'bcn':{iata:'BCN',name:'Barcelone',tz:'CET'},
+  'rome':{iata:'FCO',name:'Rome',tz:'CET'},'roma':{iata:'FCO',name:'Rome',tz:'CET'},'fco':{iata:'FCO',name:'Rome',tz:'CET'},
+  'milan':{iata:'MXP',name:'Milan',tz:'CET'},'milano':{iata:'MXP',name:'Milan',tz:'CET'},'mxp':{iata:'MXP',name:'Milan',tz:'CET'},
+  'lisbonne':{iata:'LIS',name:'Lisbonne',tz:'WET'},'lisbon':{iata:'LIS',name:'Lisbonne',tz:'WET'},'lis':{iata:'LIS',name:'Lisbonne',tz:'WET'},
+  'zurich':{iata:'ZRH',name:'Zurich',tz:'CET'},'zrh':{iata:'ZRH',name:'Zurich',tz:'CET'},
+  'vienne':{iata:'VIE',name:'Vienne',tz:'CET'},'vienna':{iata:'VIE',name:'Vienne',tz:'CET'},'vie':{iata:'VIE',name:'Vienne',tz:'CET'},
+  'bruxelles':{iata:'BRU',name:'Bruxelles',tz:'CET'},'brussels':{iata:'BRU',name:'Bruxelles',tz:'CET'},'bru':{iata:'BRU',name:'Bruxelles',tz:'CET'},
+  'istanbul':{iata:'IST',name:'Istanbul',tz:'TRT'},'ist':{iata:'IST',name:'Istanbul',tz:'TRT'},
+  'new york':{iata:'JFK',name:'New York',tz:'EST'},'new-york':{iata:'JFK',name:'New York',tz:'EST'},'jfk':{iata:'JFK',name:'New York JFK',tz:'EST'},
+  'newark':{iata:'EWR',name:'Newark',tz:'EST'},'ewr':{iata:'EWR',name:'Newark',tz:'EST'},
+  'los angeles':{iata:'LAX',name:'Los Angeles',tz:'PST'},'lax':{iata:'LAX',name:'Los Angeles',tz:'PST'},
+  'miami':{iata:'MIA',name:'Miami',tz:'EST'},'mia':{iata:'MIA',name:'Miami',tz:'EST'},
+  'chicago':{iata:'ORD',name:'Chicago',tz:'CST'},'ord':{iata:'ORD',name:'Chicago',tz:'CST'},
+  'montreal':{iata:'YUL',name:'Montréal',tz:'EST'},'montréal':{iata:'YUL',name:'Montréal',tz:'EST'},'yul':{iata:'YUL',name:'Montréal',tz:'EST'},
+  'toronto':{iata:'YYZ',name:'Toronto',tz:'EST'},'yyz':{iata:'YYZ',name:'Toronto',tz:'EST'},
+  'rio de janeiro':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},'rio':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},'gig':{iata:'GIG',name:'Rio de Janeiro',tz:'BRT'},
+  'sao paulo':{iata:'GRU',name:'São Paulo',tz:'BRT'},'são paulo':{iata:'GRU',name:'São Paulo',tz:'BRT'},'gru':{iata:'GRU',name:'São Paulo',tz:'BRT'},
+  'buenos aires':{iata:'EZE',name:'Buenos Aires',tz:'ART'},'eze':{iata:'EZE',name:'Buenos Aires',tz:'ART'},
+  'tokyo':{iata:'HND',name:'Tokyo Haneda',tz:'JST'},'hnd':{iata:'HND',name:'Tokyo Haneda',tz:'JST'},
+  'nrt':{iata:'NRT',name:'Tokyo Narita',tz:'JST'},
+  'seoul':{iata:'ICN',name:'Séoul',tz:'KST'},'séoul':{iata:'ICN',name:'Séoul',tz:'KST'},'icn':{iata:'ICN',name:'Séoul',tz:'KST'},
+  'pekin':{iata:'PEK',name:'Pékin',tz:'CST'},'beijing':{iata:'PEK',name:'Pékin',tz:'CST'},'pek':{iata:'PEK',name:'Pékin',tz:'CST'},
+  'shanghai':{iata:'PVG',name:'Shanghai',tz:'CST'},'pvg':{iata:'PVG',name:'Shanghai',tz:'CST'},
+  'hong kong':{iata:'HKG',name:'Hong Kong',tz:'HKT'},'hkg':{iata:'HKG',name:'Hong Kong',tz:'HKT'},
+  'singapour':{iata:'SIN',name:'Singapour',tz:'SGT'},'singapore':{iata:'SIN',name:'Singapour',tz:'SGT'},'sin':{iata:'SIN',name:'Singapour',tz:'SGT'},
+  'bangkok':{iata:'BKK',name:'Bangkok',tz:'ICT'},'bkk':{iata:'BKK',name:'Bangkok',tz:'ICT'},
+  'mumbai':{iata:'BOM',name:'Mumbai',tz:'IST'},'bombay':{iata:'BOM',name:'Mumbai',tz:'IST'},'bom':{iata:'BOM',name:'Mumbai',tz:'IST'},
+  'delhi':{iata:'DEL',name:'Delhi',tz:'IST'},'new delhi':{iata:'DEL',name:'Delhi',tz:'IST'},'del':{iata:'DEL',name:'Delhi',tz:'IST'},
+  'sydney':{iata:'SYD',name:'Sydney',tz:'AEDT'},'syd':{iata:'SYD',name:'Sydney',tz:'AEDT'},
+  'dubai':{iata:'DXB',name:'Dubai',tz:'GST'},'dxb':{iata:'DXB',name:'Dubai',tz:'GST'},
+  'doha':{iata:'DOH',name:'Doha',tz:'AST'},'doh':{iata:'DOH',name:'Doha',tz:'AST'},
+  'casablanca':{iata:'CMN',name:'Casablanca',tz:'WET'},'cmn':{iata:'CMN',name:'Casablanca',tz:'WET'},
+  'johannesburg':{iata:'JNB',name:'Johannesburg',tz:'SAST'},'jnb':{iata:'JNB',name:'Johannesburg',tz:'SAST'},
+  'nairobi':{iata:'NBO',name:'Nairobi',tz:'EAT'},'nbo':{iata:'NBO',name:'Nairobi',tz:'EAT'},
+};
+
+// ─── MOTEUR D'ANALYSE ───────────────────────────────────────────────────
+function analyzeQuery(q) {
+  const raw = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const knownCodes = ['AF','BA','U2','LH','KL','TO','FR','TP','VY','IB','LX','TK','EK','QR','AA','DL','UA','AC'];
+
+  // Étape 1 : numéro de vol
+  const fnm = q.match(/(?:^|[\s\-\(])([A-Z]{1,3})[\s]?(\d{1,5})(?=$|[\s\-\)])/i);
+  if (fnm) {
+    const code = fnm[1].toUpperCase(), num = fnm[2];
+    if (knownCodes.includes(code.substring(0,2)) || code.length === 2)
+      return { type:'specific', flightNum: code+num, query: q };
+  }
+
+  // Étape 2 : codes IATA 3 lettres
+  const found = [];
+  for (const m of [...q.matchAll(/\b([A-Z]{3})\b/g)]) {
+    const k = m[1].toLowerCase();
+    if (CITIES[k] && !found.some(f=>f.iata===CITIES[k].iata)) { found.push(CITIES[k]); if(found.length===2) break; }
+  }
+
+  // Étape 3 : noms de villes
+  const ckeys = Object.keys(CITIES).sort((a,b)=>b.length-a.length);
+  for (const k of ckeys) {
+    if (k.length<=3) continue;
+    const re = new RegExp('(?<![a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])');
+    if (re.test(raw)) {
+      const c = CITIES[k];
+      if (!found.some(f=>f.iata===c.iata)) { found.push(c); if(found.length===2) break; }
+    }
+  }
+
+  // Étape 4 : compagnie
+  let airline = null;
+  for (const key of Object.keys(AIRLINES).sort((a,b)=>b.length-a.length)) {
+    const matched = key.length>=4 ? raw.includes(key)
+      : new RegExp('(?<![a-z])'+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])').test(raw);
+    if (matched) { airline = AIRLINES[key]; break; }
+  }
+
+  let timeHint = "aujourd'hui";
+  if (raw.includes('demain')) timeHint = 'demain';
+  if (raw.includes('matin')) timeHint += ' matin';
+  else if (raw.includes('soir')) timeHint += ' soir';
+
+  return { type:'search', airline, dep:found[0]||null, arr:found[1]||null, timeHint, query:q };
+}
+
+function buildFlights(a) {
+  const date = new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+
+  if (a.type === 'specific') {
+    const raw = a.flightNum, norm = normNum(raw);
+    const code = raw.match(/^([A-Z]{1,3})/)?.[1]||'';
+    const db = FLIGHT_DB[norm];
+    if (db) {
+      const dc = CITIES[db.dep.toLowerCase()]||{name:db.dep,tz:''};
+      const ac = CITIES[db.arr.toLowerCase()]||{name:db.arr,tz:''};
+      return [{
+        num:raw, compagnie:airName(code),
+        dep_iata:db.dep, dep_name:dc.name,
+        arr_iata:db.arr, arr_name:ac.name,
+        hDep:db.hDep, hArr:db.hArr,
+        tzDep:db.tz_dep, tzArr:db.tz_arr,
+        dur:db.dur, escales:db.escales, statut:'Horaire habituel',
+        details:[
+          {l:'Date',v:date},
+          {l:'Terminal départ',v:db.terminal_dep||'—'},
+          {l:'Terminal arrivée',v:db.terminal_arr||'—'},
+          {l:'Appareil',v:db.appareil||'—'},
+          ...(db.note?[{l:'Note',v:db.note,warn:true}]:[]),
+        ]
+      }];
+    }
+    return [{
+      num:raw, compagnie:airName(code),
+      dep_iata:'—', dep_name:'',
+      arr_iata:'—', arr_name:'',
+      hDep:null, hArr:null, tzDep:'', tzArr:'',
+      dur:null, escales:null,
+      statut:'Voir FlightAware',
+      details:[{l:'Date',v:date},{l:'Info',v:'Cliquez FlightAware pour les horaires',ok:true}]
+    }];
+  }
+
+  const {airline, dep, arr, timeHint} = a;
+  const matches = Object.keys(FLIGHT_DB).filter(n=>{
+    const f=FLIGHT_DB[n];
+    return (!dep||f.dep===dep.iata) && (!arr||f.arr===arr.iata) && (!airline||n.startsWith(airline.code));
+  }).sort((a,b)=>parseInt(FLIGHT_DB[a].hDep)-parseInt(FLIGHT_DB[b].hDep)).slice(0,3);
+
+  if (matches.length) {
+    return matches.map(n=>{
+      const db=FLIGHT_DB[n], code=n.match(/^([A-Z]{1,3})/)?.[1]||'';
+      const dc=CITIES[db.dep.toLowerCase()]||{name:db.dep,tz:''};
+      const ac=CITIES[db.arr.toLowerCase()]||{name:db.arr,tz:''};
+      return {
+        num:n, compagnie:airName(code),
+        dep_iata:db.dep, dep_name:dc.name,
+        arr_iata:db.arr, arr_name:ac.name,
+        hDep:db.hDep, hArr:db.hArr,
+        tzDep:db.tz_dep, tzArr:db.tz_arr,
+        dur:db.dur, escales:db.escales, statut:'Horaire habituel',
+        details:[
+          {l:'Date',v:date},
+          {l:'Terminal dep.',v:db.terminal_dep||'—'},
+          {l:'Terminal arr.',v:db.terminal_arr||'—'},
+          {l:'Appareil',v:db.appareil||'—'},
+          ...(db.note?[{l:'Note',v:db.note,warn:true}]:[]),
+        ]
+      };
+    });
+  }
+
+  const rFA = (dep&&arr)?`https://www.flightaware.com/live/findflight/?origin=${dep.iata}&destination=${arr.iata}`:'https://flightaware.com/live/findflight/';
+  return [{
+    num:'—', compagnie: airline?airName(airline.code):(dep&&arr?`${dep.iata}→${arr.iata}`:'Route'),
+    dep_iata:dep?.iata||'—', dep_name:dep?.name||'',
+    arr_iata:arr?.iata||'—', arr_name:arr?.name||'',
+    hDep:null, hArr:null, tzDep:dep?.tz||'', tzArr:arr?.tz||'',
+    dur:null, escales:null,
+    statut:'Voir FlightAware',
+    _routeFA:rFA,
+    details:[
+      {l:'Date',v:`${timeHint} · ${date}`},
+      ...(airline?[{l:'Compagnie',v:airName(airline.code)}]:[]),
+      {l:'Données',v:'Route non référencée en base',warn:true},
+    ]
+  }];
+}
+
+// ─── RENDU CARTE ────────────────────────────────────────────────────────
+function renderCard(f, i) {
+  const sc = statusClass(f.statut);
+  const rFA = f._routeFA || faUrl(f.num);
+  const noData = f.hDep === null;
+  const numDisp = (!f.num||f.num==='—')
+    ? `<a href="${rFA}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:500">Voir sur FlightAware →</a>`
+    : f.num;
+
+  const timeDepHtml = noData
+    ? `<a class="time-fa-link" href="${rFA}" target="_blank">Voir horaires →</a>`
+    : `${f.hDep} <span class="ap-tz">${f.tzDep}</span>`;
+
+  const timeArrHtml = noData
+    ? `<a class="time-fa-link" href="${rFA}" target="_blank">Voir horaires →</a>`
+    : `${f.hArr} <span class="ap-tz">${f.tzArr}</span>`;
+
+  const dets = f.details?.length ? `<div class="fc-dets">${
+    f.details.map(d=>`<div><div class="det-lbl">${d.l}</div><div class="det-val${d.ok?' ok':d.warn?' warn':''}">${d.v}</div></div>`).join('')
+  }</div>` : '';
+
+  return `<div class="flight-card result-in" style="animation-delay:${i*80}ms">
+    <div class="fc-head">
+      <div class="fc-meta">
+        <span class="fc-num">${numDisp}</span>
+        <span class="fc-airline">${f.compagnie||''}</span>
+      </div>
+      <span class="badge ${sc}">${f.statut}</span>
+    </div>
+    <div class="fc-route">
+      <div class="ap">
+        <div class="ap-code">${f.dep_iata}</div>
+        <div class="ap-city">${f.dep_name}</div>
+        <div class="ap-time">${timeDepHtml}</div>
+      </div>
+      <div class="mid">
+        <div class="mid-dur">${f.dur||'—'}</div>
+        <div class="route-bar"><span class="fly">✈</span></div>
+        <div class="mid-stops">${f.escales||'—'}</div>
+      </div>
+      <div class="ap r">
+        <div class="ap-code">${f.arr_iata}</div>
+        <div class="ap-city">${f.arr_name}</div>
+        <div class="ap-time">${timeArrHtml}</div>
+      </div>
+    </div>
+    ${dets}
+    <div class="fc-links">
+      <a class="lbtn lprim" href="${rFA}" target="_blank">FlightAware</a>
+      <a class="lbtn" href="${fr24Url(f.num)}" target="_blank">FlightRadar24</a>
+      <a class="lbtn" href="${gUrl(f.num!=='—'?f.num:'',f.dep_iata!=='—'?f.dep_iata:'',f.arr_iata!=='—'?f.arr_iata:'')}" target="_blank">Google</a>
+    </div>
+  </div>`;
+}
+
+// ─── RECHERCHE PRINCIPALE ───────────────────────────────────────────────
+const steps = ['Analyse de votre demande…','Identification du vol…','Liens FlightAware…','Génération de la fiche…'];
+
+async function doSearch() {
+  const q = (document.getElementById('query').value||'').trim();
+  if (!q) return;
+
+  const btn = document.getElementById('searchBtn');
+  const out  = document.getElementById('out');
+  const load = document.getElementById('loading');
+  const ltxt = document.getElementById('loadingTxt');
+
+  btn.disabled = true;
+  out.innerHTML = '';
+  load.classList.add('active');
+
+  for (let i=0; i<steps.length; i++) {
+    ltxt.textContent = steps[i];
+    await new Promise(r=>setTimeout(r,350));
+  }
+
+  const analysis = analyzeQuery(q);
+  const flights  = buildFlights(analysis);
+  load.classList.remove('active');
+
+  let html = '';
+
+  // Info box
+  const {dep, arr, airline, type, flightNum} = analysis;
+  let info = '';
+  if (type==='specific') {
+    const inDB = !!FLIGHT_DB[normNum(flightNum)];
+    info = inDB
+      ? `Vol <b>${flightNum}</b> trouvé — horaire habituel. Cliquez <b>FlightAware</b> pour le statut du jour.`
+      : `Vol <b>${flightNum}</b> — non référencé en base. Cliquez <b>FlightAware</b> pour les données en direct.`;
+  } else {
+    const parts = [];
+    if (airline) parts.push(`<b>${airName(airline.code)}</b>`);
+    if (dep) parts.push(`depuis <b>${dep.name}</b>`);
+    if (arr) parts.push(`vers <b>${arr.name}</b>`);
+    info = parts.length ? `J'ai compris : ${parts.join(', ')}.` : `Recherche : <b>${q}</b>.`;
+  }
+
+  html += `<div class="info-card result-in">
+    ${info}
+    <div class="warn-note">⚠ Horaires indicatifs — vérifiez sur FlightAware</div>
+  </div>`;
+
+  // Bouton route FA
+  if (type==='search' && dep && arr) {
+    const rUrl = `https://www.flightaware.com/live/findflight/?origin=${dep.iata}&destination=${arr.iata}`;
+    html += `<a class="route-btn result-in" style="animation-delay:60ms" href="${rUrl}" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      Voir tous les vols ${dep.iata} → ${arr.iata} sur FlightAware
+    </a>`;
+  }
+
+  flights.forEach((f,i) => { html += renderCard(f, i+1); });
+
+  html += `<div class="conseil result-in" style="animation-delay:${(flights.length+1)*80}ms">
+    <b>Conseil :</b> FlightAware et FlightRadar24 donnent le statut exact du vol, la porte d'embarquement et la position en direct. Cliquez sur le bouton <b>FlightAware</b> dans la fiche ci-dessus.
+  </div>`;
+
+  out.innerHTML = html;
+
+  // Scroll vers résultats
+  document.getElementById('scrollArea').scrollTo({ top: document.getElementById('chipsWrap').offsetTop, behavior: 'smooth' });
+
+  btn.disabled = false;
+}
+
+document.getElementById('query').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }
+});
+</script>
+</body>
+</html>
