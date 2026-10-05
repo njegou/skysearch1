@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="40" fill="#0c0e14"/>
-  <text x="96" y="130" font-size="100" text-anchor="middle" fill="white">✈</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="SkySearch">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6f92ff"/><stop offset="1" stop-color="#b183ff"/>
+  </linearGradient></defs>
+  <rect width="192" height="192" rx="42" fill="#060810"/>
+  <rect x="14" y="14" width="164" height="164" rx="34" fill="url(#g)" opacity=".18"/>
+  <text x="96" y="132" font-size="104" text-anchor="middle" fill="url(#g)" font-family="system-ui,sans-serif">✈</text>
 </svg>
