@@ -478,8 +478,8 @@ function mkLive(o) {
 
 /* ---------- Réglages ---------- */
 const CFG = {
-  get() { try { return JSON.parse(safeGet('ss3_cfg') || '{}'); } catch (e) { return {}; } },
-  set(p) { const c = Object.assign(CFG.get(), p); safeSet('ss3_cfg', JSON.stringify(c)); return c; },
+  get() { try { return JSON.parse(safeGet('ss4_cfg') || '{}'); } catch (e) { return {}; } },
+  set(p) { const c = Object.assign(CFG.get(), p); safeSet('ss4_cfg', JSON.stringify(c)); return c; },
   provider() { return CFG.get().provider || 'local'; },
   key() { return CFG.get().key || ''; },
   proxy() { return (CFG.get().proxy || '').trim(); },
@@ -494,7 +494,7 @@ function cacheGet(k) {
   const m = mem.get(k);
   if (m && Date.now() - m.t < TTL) return m.v;
   try {
-    const raw = safeGet('ss3_c_' + k);
+    const raw = safeGet('ss4_c_' + k);
     if (raw) {
       const o = JSON.parse(raw);
       if (Date.now() - o.t < TTL) {
@@ -514,7 +514,7 @@ function cacheGet(k) {
 }
 function cachePut(k, v) {
   mem.set(k, { t: Date.now(), v });
-  try { safeSet('ss3_c_' + k, JSON.stringify({ t: Date.now(), v })); } catch (e) { }
+  try { safeSet('ss4_c_' + k, JSON.stringify({ t: Date.now(), v })); } catch (e) { }
 }
 
 /* ---------- Appel ---------- */
@@ -590,224 +590,202 @@ const fr24Url = n => `https://www.flightradar24.com/data/flights/${String(n).toL
 
 /* ============================================================
    9. INTERFACE
+   Rendu sobre : des lignes de texte, pas des cartes décorées.
    ============================================================ */
 const $ = id => document.getElementById(id);
 const reduced = () => { try { return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
-const isStandalone = () => { try { return !!navigator.standalone || (typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches); } catch (e) { return false; } };
 
-const S = { from: null, to: null, date: null, flights: [], shown: 0, sort: 'dep', source: 'local', error: null, req: null };
-const PAGE = 6;
+const S = { from: null, to: null, date: null, flights: [], shown: 0, sort: 'dep', source: 'local', error: null };
+const PAGE = 10;
 
 /* ---------- Champs avec autocomplétion ---------- */
-function setupField(inputId, acId, clearId, resId, slot) {
-  const inp = $(inputId), ac = $(acId), clr = $(clearId), res = $(resId);
+function setupField(inputId, acId, resId, slot) {
+  const inp = $(inputId), ac = $(acId), res = $(resId);
   let items = [], sel = -1;
 
-  function close() { ac.className = 'ac'; inp.setAttribute('aria-expanded', 'false'); sel = -1; }
+  const close = () => { ac.classList.remove('on'); inp.setAttribute('aria-expanded', 'false'); sel = -1; };
 
   function paint() {
     const q = inp.value.trim();
-    clr.classList.toggle('on', q.length > 0);
     if (q.length < 1) { close(); ac.innerHTML = ''; return; }
     items = suggest(q, 8);
     if (!items.length) {
-      ac.innerHTML = `<div class="ac-empty">Aucun pays, ville ou aéroport ne correspond à « ${esc(q)} ».</div>`;
-      ac.className = 'ac on'; inp.setAttribute('aria-expanded', 'true');
+      ac.innerHTML = `<button type="button" disabled style="color:var(--text3)">Aucune correspondance pour « ${esc(q)} »</button>`;
+      ac.classList.add('on'); inp.setAttribute('aria-expanded', 'true');
       return;
     }
-    const icon = { country: '🌍', city: '🏙', airport: '✈' };
-    const cls = { country: 'c', city: 'v', airport: 'a' };
-    ac.innerHTML = items.map((o, i) => `<button class="ac-item${i === sel ? ' sel' : ''}" type="button" role="option"
-       aria-selected="${i === sel}" data-i="${i}">
-      <span class="ac-ic ${cls[o.type]}" aria-hidden="true">${icon[o.type]}</span>
-      <span class="ac-main"><span class="ac-t">${esc(o.title)}</span><span class="ac-s">${esc(o.sub)}</span></span>
-      <span class="ac-n">${esc(o.badge)}</span></button>`).join('');
-    ac.className = 'ac on'; inp.setAttribute('aria-expanded', 'true');
+    const label = { country: 'Pays', city: 'Ville', airport: 'Aéroport' };
+    ac.innerHTML = items.map((o, i) => `<button type="button" role="option" data-i="${i}"
+      class="${i === sel ? 'sel' : ''}" aria-selected="${i === sel}">
+      <span class="t"><b>${esc(o.title)}</b><span class="s">${label[o.type]} · ${esc(o.sub)}</span></span>
+      <span class="k">${esc(o.badge)}</span></button>`).join('');
+    ac.classList.add('on'); inp.setAttribute('aria-expanded', 'true');
     ac.querySelectorAll('[data-i]').forEach(b => b.onclick = () => choose(items[+b.dataset.i]));
   }
 
   function choose(o) {
     if (!o) return;
-    S[slot] = o.resolved;
-    inp.value = o.resolved.kind === 'airport'
-      ? `${o.resolved.label} (${o.resolved.code})`
-      : o.resolved.label;
-    inp.classList.add('ok');
-    showRes();
+    const r = o.resolved;
+    S[slot] = r;
+    inp.value = r.kind === 'airport' ? `${r.label} (${r.code})` : r.label;
+    showResolved();
     close();
     if (slot === 'from') $('to').focus();
   }
 
-  function showRes() {
+  function showResolved() {
     const r = S[slot];
-    if (!r) { res.className = 'res'; return; }
+    if (!r) { res.classList.remove('on'); res.textContent = ''; return; }
     if (r.kind === 'country') {
-      const list = r.aps.slice(0, 6).join(', ') + (r.aps.length > 6 ? `, +${r.aps.length - 6}` : '');
-      res.innerHTML = `<b>${r.aps.length} aéroport${r.aps.length > 1 ? 's' : ''}</b> : ${esc(list)}`;
-      res.className = 'res on';
-    } else if (r.kind === 'city' && r.aps.length > 1) {
-      res.innerHTML = `<b>${r.aps.length} aéroports</b> : ${esc(r.aps.join(', '))}`;
-      res.className = 'res on';
+      const shown = r.aps.slice(0, 8).join(', ');
+      res.innerHTML = `${r.aps.length} aéroport${r.aps.length > 1 ? 's' : ''} : <code>${esc(shown)}</code>`
+        + (r.aps.length > 8 ? ` et ${r.aps.length - 8} autre${r.aps.length - 8 > 1 ? 's' : ''}` : '');
+    } else if (r.aps.length > 1) {
+      res.innerHTML = `${r.aps.length} aéroports : <code>${esc(r.aps.join(', '))}</code>`;
     } else {
-      res.innerHTML = `Aéroport <b>${esc(r.aps[0])}</b>`;
-      res.className = 'res on';
+      res.innerHTML = `Aéroport <code>${esc(r.aps[0])}</code>`;
     }
+    res.classList.add('on');
   }
 
-  inp.addEventListener('input', () => { S[slot] = null; inp.classList.remove('ok'); res.className = 'res'; paint(); });
-  inp.addEventListener('focus', () => { if (inp.value.trim()) paint(); });
+  inp.addEventListener('input', () => { S[slot] = null; res.classList.remove('on'); paint(); });
+  inp.addEventListener('focus', () => { if (inp.value.trim() && !S[slot]) paint(); });
   inp.addEventListener('blur', () => setTimeout(() => {
     close();
-    /* saisie libre validée au flou : on résout au mieux */
     if (!S[slot] && inp.value.trim()) {
       const r = resolve(inp.value);
-      if (r) { S[slot] = r; inp.value = r.kind === 'airport' ? `${r.label} (${r.code})` : r.label; inp.classList.add('ok'); showRes(); }
+      if (r) { S[slot] = r; inp.value = r.kind === 'airport' ? `${r.label} (${r.code})` : r.label; showResolved(); }
     }
-  }, 170));
+  }, 180));
   inp.addEventListener('keydown', e => {
-    if (!items.length || ac.className.indexOf('on') < 0) {
-      if (e.key === 'Enter' && inp.value.trim()) { const r = resolve(inp.value); if (r) choose({ resolved: r }); }
+    if (!ac.classList.contains('on') || !items.length) {
+      if (e.key === 'Enter' && inp.value.trim() && !S[slot]) {
+        const r = resolve(inp.value);
+        if (r) { e.preventDefault(); choose({ resolved: r }); }
+      }
       return;
     }
-    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(items.length - 1, sel + 1); paint(); ac.querySelector('.sel')?.scrollIntoView({ block: 'nearest' }); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); ac.querySelector('.sel')?.scrollIntoView({ block: 'nearest' }); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(items.length - 1, sel + 1); paint(); scrollSel(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); scrollSel(); }
     else if (e.key === 'Enter') { e.preventDefault(); choose(items[sel >= 0 ? sel : 0]); }
     else if (e.key === 'Escape') { close(); }
   });
-  clr.onclick = () => { inp.value = ''; S[slot] = null; inp.classList.remove('ok'); res.className = 'res'; clr.classList.remove('on'); close(); inp.focus(); };
+  const scrollSel = () => { const el = ac.querySelector('.sel'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); };
 
-  return { set(r) { S[slot] = r; inp.value = r ? (r.kind === 'airport' ? `${r.label} (${r.code})` : r.label) : ''; inp.classList.toggle('ok', !!r); showRes(); clr.classList.toggle('on', !!r); } };
+  return {
+    set(r) {
+      S[slot] = r || null;
+      inp.value = r ? (r.kind === 'airport' ? `${r.label} (${r.code})` : r.label) : '';
+      showResolved();
+    }
+  };
 }
 
-const fieldFrom = setupField('from', 'acFrom', 'xFrom', 'resFrom', 'from');
-const fieldTo = setupField('to', 'acTo', 'xTo', 'resTo', 'to');
+const fieldFrom = setupField('from', 'acFrom', 'resFrom', 'from');
+const fieldTo = setupField('to', 'acTo', 'resTo', 'to');
 
-/* ---------- Rendu ---------- */
-function progress(f) {
-  if (!isDate(f.depAbs) || !isDate(f.arrAbs) || f.status === 'cancelled') return 0;
-  const now = Date.now(), a = f.depAbs.getTime(), b = f.arrAbs.getTime();
-  if (now <= a) return 0;
-  if (now >= b) return 1;
-  return (now - a) / (b - a);
+/* ---------- Rendu d'un vol ---------- */
+function badgeFor(f) {
+  if (!f.live) return '<span class="badge b-plan">prévu</span>';
+  const s = f.status || 'scheduled';
+  if (s === 'cancelled') return '<span class="badge b-off">annulé</span>';
+  if (s === 'diverted') return '<span class="badge b-off">dérouté</span>';
+  if (s === 'delayed') return `<span class="badge b-late">retard ${f.delay ? f.delay + ' min' : ''}</span>`;
+  if (s === 'departed') return '<span class="badge b-air">en vol</span>';
+  if (s === 'landed') return '<span class="badge b-plan">atterri</span>';
+  return '<span class="badge b-plan">à l\'heure</span>';
 }
-function arcSVG(f, i) {
-  const p = progress(f), W = 280, H = 64, y = 48;
-  const path = `M12,${y} Q${W / 2},4 ${W - 12},${y}`;
-  const flying = p > 0 && p < 1;
-  return `<svg class="arc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-<defs><linearGradient id="g${i}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--cyan)"/></linearGradient></defs>
-<path d="${path}" class="arc-bg"/>
-<path d="${path}" class="arc-fg" stroke="url(#g${i})" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:${1 - p}"/>
-<circle class="arc-dot" cx="12" cy="${y}" r="3.5"/><circle class="arc-dot" cx="${W - 12}" cy="${y}" r="3.5"/>
-<g class="arc-plane${flying ? ' flying' : ''}" style="offset-path:path('${path}');offset-distance:${(p * 100).toFixed(2)}%"><text y="4" text-anchor="middle" font-size="15">✈</text></g></svg>`;
-}
-function statusPill(f) {
-  if (!f.live) return `<span class="st s-sched">Horaire théorique</span>`;
-  const st = f.status || 'scheduled';
-  let txt = STATUS_FR[st] || 'Prévu';
-  if (st === 'delayed' && f.delay) txt = `Retard ${f.delay} min`;
-  const dot = st === 'departed' ? '<span class="pdot"></span>' : '';
-  return `<span class="st ${STATUS_CLASS[st] || 's-sched'}">${dot}${esc(txt)}</span>`;
-}
-function timeCell(f, side) {
+
+function timeHTML(f, side) {
   const min = side === 'dep' ? f.depMin : f.arrMin;
   const sched = side === 'dep' ? f.schedDep : f.schedArr;
   const act = side === 'dep' ? f.depAbs : f.arrAbs;
   const late = f.live && isDate(sched) && isDate(act) && Math.abs(act - sched) >= 60000;
-  const tz = side === 'dep' ? f.tzDep : f.tzArr;
-  return `<div class="t-main" style="${late ? 'color:var(--gold)' : ''}">${min == null ? '--:--' : fmtHM(min)}<span class="ap-tz">${esc(tz || '')}</span></div>`;
+  let html = min == null ? '--:--' : fmtHM(min);
+  if (late) html += `<span class="was">${pad2(sched.getHours())}:${pad2(sched.getMinutes())}</span>`;
+  return html;
 }
 
-function cardHTML(f, i) {
-  const cells = [];
-  if (f.gate) cells.push(['Porte', f.gate]);
-  if (f.td) cells.push(['Terminal dép.', f.td]);
-  if (f.ta) cells.push(['Terminal arr.', f.ta]);
-  if (f.belt) cells.push(['Tapis', f.belt]);
-  if (f.ac) cells.push(['Appareil', f.ac]);
-  if (f.dur) cells.push(['Durée', fmtDur(f.dur)]);
-  return `<article class="fc" style="--i:${Math.min(i, 8)}" aria-label="Vol ${esc(f.num)} ${esc(f.depCity)} vers ${esc(f.arrCity)}">
-<div class="fc-head">
-  <div class="fc-left"><span class="fc-num">${esc(f.num)}</span><span class="fc-co">${esc(f.airline || '')}</span></div>
-  <div class="fc-act">${statusPill(f)}</div>
-</div>
-<div class="fc-route">
-  <div class="ap">
-    <div class="ap-code">${esc(f.depIata)}</div>
-    <div class="ap-city">${esc(f.depCity)}</div>
-    <div class="ap-ap">${esc(f.depName)}</div>
-    ${timeCell(f, 'dep')}
-  </div>
-  <div class="mid">
-    ${arcSVG(f, i)}
-    <div class="mdur">${f.dur ? fmtDur(f.dur) : ''}</div>
-    <div class="mkm">${f.dist ? f.dist.toLocaleString('fr-FR') + ' km' : ''}</div>
-  </div>
-  <div class="ap r">
-    <div class="ap-code">${esc(f.arrIata)}</div>
-    <div class="ap-city">${esc(f.arrCity)}</div>
-    <div class="ap-ap">${esc(f.arrName)}</div>
-    ${timeCell(f, 'arr')}
-    ${f.dayShift > 0 ? `<div class="nextday">+${f.dayShift} jour${f.dayShift > 1 ? 's' : ''}</div>` : ''}
-  </div>
-</div>
-${cells.length ? `<div class="fc-dets">${cells.map(([l, v]) => `<div><div class="dl">${esc(l)}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>` : ''}
-<div class="fc-links">
-  <a class="lb p" href="${faUrl(f.num)}" target="_blank" rel="noopener noreferrer">Statut en direct<span class="sr-only"> (nouvel onglet)</span></a>
-  <a class="lb" href="${fr24Url(f.num)}" target="_blank" rel="noopener noreferrer">FR24<span class="sr-only"> (nouvel onglet)</span></a>
-  <button class="lb" type="button" data-copy="${esc(f.num)}">Copier</button>
-</div></article>`;
-}
+function flightHTML(f) {
+  const facts = [];
+  if (f.dur) facts.push(fmtDur(f.dur));
+  if (f.dist) facts.push(f.dist.toLocaleString('fr-FR') + ' km');
+  if (f.ac) facts.push(esc(f.ac));
+  if (f.td) facts.push('terminal ' + esc(f.td));
+  if (f.gate) facts.push('porte ' + esc(f.gate));
+  if (f.belt) facts.push('tapis ' + esc(f.belt));
 
-function skeleton(n) {
-  let s = '';
-  for (let i = 0; i < n; i++) s += `<div class="sk" style="--i:${i}">
-    <div class="sk-row"><div class="sk-b w80"></div><div class="sk-b w50"></div></div>
-    <div class="sk-route"><div class="sk-b w60 tall"></div><div class="sk-b w100"></div><div class="sk-b w60 tall"></div></div>
-    <div class="sk-row"><div class="sk-b w40"></div><div class="sk-b w40"></div><div class="sk-b w40"></div></div></div>`;
-  return s;
+  return `<li class="flight${f.status === 'cancelled' ? ' off' : ''}">
+  <div class="fl-top">
+    <span class="fl-id"><b>${esc(f.num)}</b> <span>${esc(f.airline || '')}</span></span>
+    ${badgeFor(f)}
+  </div>
+  <div class="fl-leg">
+    <div>
+      <div class="fl-time">${timeHTML(f, 'dep')}</div>
+      <div class="fl-code">${esc(f.depIata)}</div>
+      <div class="fl-place">${esc(f.depCity)}</div>
+    </div>
+    <div class="fl-arrow" aria-hidden="true">→</div>
+    <div class="fl-right">
+      <div class="fl-time">${timeHTML(f, 'arr')}</div>
+      <div class="fl-code">${esc(f.arrIata)}</div>
+      <div class="fl-place">${esc(f.arrCity)}</div>
+      ${f.dayShift > 0 ? `<div class="fl-plus">+${f.dayShift} jour${f.dayShift > 1 ? 's' : ''}</div>` : ''}
+    </div>
+  </div>
+  <p class="fl-facts">${facts.map(x => `<span>${x}</span>`).join('')}</p>
+  <p class="fl-links">
+    <a href="${faUrl(f.num)}" target="_blank" rel="noopener noreferrer">Statut en direct</a>
+    <a href="${fr24Url(f.num)}" target="_blank" rel="noopener noreferrer">Flightradar24</a>
+    <button type="button" data-copy="${esc(f.num)}">Copier</button>
+  </p>
+</li>`;
 }
-
-function kindWord(r) { return r.kind === 'country' ? 'pays' : r.kind === 'city' ? 'ville' : 'aéroport'; }
 
 function render() {
   const out = $('out');
   if (!S.flights.length) { out.innerHTML = emptyHTML(); wire(); return; }
-
-  const srcTag = S.source === 'live'
-    ? `<span class="tag tag-l"><span class="pdot"></span>Vols réels du jour</span>`
-    : `<span class="tag tag-w">Base embarquée · horaires théoriques</span>`;
-
-  let html = `<div class="ctx">
-    <b>${esc(S.from.label)}</b> → <b>${esc(S.to.label)}</b>
-    <div class="ctx-meta">
-      ${srcTag}
-      <span class="tag tag-d">📅 ${esc(longDate(S.date))}</span>
-      <span class="tag tag-d">${S.from.aps.length}×${S.to.aps.length} aéroports balayés</span>
-    </div></div>`;
 
   const list = S.sort === 'dur'
     ? S.flights.slice().sort((a, b) => (a.dur || 1e9) - (b.dur || 1e9))
     : S.flights;
   const slice = list.slice(0, S.shown);
 
-  html += `<div class="toolbar">
-    <span class="count"><b>${list.length}</b> vol${list.length > 1 ? 's' : ''} trouvé${list.length > 1 ? 's' : ''}</span>
-    <div class="sorts" role="group" aria-label="Trier">
-      <button class="sort-b" type="button" data-sort="dep" aria-pressed="${S.sort === 'dep'}">Heure</button>
-      <button class="sort-b" type="button" data-sort="dur" aria-pressed="${S.sort === 'dur'}">Durée</button>
-    </div></div>`;
+  const src = S.source === 'live'
+    ? 'Vols réels du jour, fournis par ' + esc(PROVIDERS[CFG.provider()].label)
+    : 'Horaires théoriques issus de la base embarquée';
 
-  html += slice.map((f, i) => cardHTML(f, i)).join('');
-  if (S.shown < list.length)
-    html += `<button class="more" type="button" id="moreBtn">Afficher ${Math.min(PAGE, list.length - S.shown)} vol(s) de plus</button>`;
+  let html = `<div class="summary">
+    <p><b>${esc(S.from.label)}</b> vers <b>${esc(S.to.label)}</b>, le ${esc(longDate(S.date))}</p>
+    <p class="meta">${src}. ${S.from.aps.length} aéroport${S.from.aps.length > 1 ? 's' : ''} au départ,
+      ${S.to.aps.length} à l'arrivée.</p>
+  </div>`;
+
+  html += `<div class="results-head">
+    <p class="n"><b>${list.length}</b> vol${list.length > 1 ? 's' : ''} sans escale</p>
+    ${list.length > 1 ? `<div class="sorts"><span>Trier</span>
+      <button type="button" data-sort="dep" aria-pressed="${S.sort === 'dep'}">heure</button>
+      <button type="button" data-sort="dur" aria-pressed="${S.sort === 'dur'}">durée</button>
+    </div>` : ''}
+  </div>`;
+
+  html += `<ol class="flights">${slice.map(flightHTML).join('')}</ol>`;
+
+  if (S.shown < list.length) {
+    html += `<p style="margin-top:.85rem"><button type="button" class="ghost" id="more" style="width:100%">
+      Afficher ${Math.min(PAGE, list.length - S.shown)} vol${Math.min(PAGE, list.length - S.shown) > 1 ? 's' : ''} de plus</button></p>`;
+  }
 
   if (S.source !== 'live') {
-    html += `<div class="note"><b>Horaires théoriques.</b> Ils viennent de la base embarquée : ni retards, ni annulations, ni portes. Le bouton <b>Statut en direct</b> ouvre FlightAware.`
-      + (CFG.ready() && (S.from.aps.length > API_MAX_AIRPORTS || S.to.aps.length > API_MAX_AIRPORTS)
-        ? ` Une recherche large (${S.from.aps.length}×${S.to.aps.length} aéroports) n'interroge pas le fournisseur : précisez une ville ou un aéroport pour obtenir les vols réels.` : '')
-      + `</div>`;
+    const broad = CFG.ready() && (S.from.aps.length > API_MAX_AIRPORTS || S.to.aps.length > API_MAX_AIRPORTS);
+    html += `<p class="notice"><b>Ces horaires sont théoriques.</b> Ils ne tiennent compte ni des retards,
+      ni des annulations, ni des changements de porte. Le lien « statut en direct » renvoie vers FlightAware.`
+      + (broad ? ` Cette recherche couvre ${S.from.aps.length}×${S.to.aps.length} aéroports : trop large pour
+      interroger le fournisseur. Précisez une ville ou un aéroport pour obtenir les vols réels.` : '')
+      + ` <a href="./docs.html#donnees">En savoir plus</a></p>`;
   }
+
   out.innerHTML = html;
   wire();
 }
@@ -816,69 +794,80 @@ function emptyHTML() {
   const e = S.error;
   if (e) {
     const M = {
-      auth: "Le fournisseur a rejeté la clé. Vérifiez-la dans les réglages, et qu'elle est bien abonnée à l'API.",
+      auth: "Le fournisseur a refusé la clé. Vérifiez qu'elle est correcte et abonnée à l'API.",
       quota: 'Le quota du fournisseur est atteint.',
-      cors: "La requête n'a pas abouti : le fournisseur refuse les appels directs depuis un navigateur, ou impose HTTP alors que la page est en HTTPS. Le proxy règle les deux cas.",
-      offline: 'Aucune connexion.',
-      timeout: 'Le fournisseur a mis plus de 12 secondes à répondre.',
-      http: `Réponse HTTP ${esc(e.status || '')}.`,
+      cors: "La requête n'a pas abouti. Le fournisseur refuse les appels directs depuis un navigateur, ou impose HTTP alors que la page est en HTTPS.",
+      offline: 'Aucune connexion réseau.',
+      timeout: 'Le fournisseur a mis plus de douze secondes à répondre.',
+      http: `Le fournisseur a répondu avec le code ${esc(e.status || '')}.`,
       api: esc(e.message || '')
     };
-    return `<div class="empty"><div class="empty-ic">⚠</div>
-      <div class="empty-t">${esc(errLabel(e.reason))}</div>
-      <div class="empty-d">${M[e.reason] || ''}</div>
-      <div class="ex-list">
-        <button class="ex" type="button" id="openCfg">⚙ Ouvrir les réglages</button>
-        <button class="ex" type="button" id="useLocal">📦 Chercher dans la base embarquée</button>
-      </div></div>`;
+    return `<div class="empty">
+      <h2>${esc(errLabel(e.reason))}</h2>
+      <p>${M[e.reason] || ''}</p>
+      <ul>
+        <li><button type="button" id="openCfg">Modifier la source des données</button></li>
+        <li><button type="button" id="useLocal">Chercher dans la base embarquée</button></li>
+        <li><a href="./docs.html#proxy">Documentation sur le proxy</a></li>
+      </ul></div>`;
   }
 
   const alt = (S.from && S.to) ? alternatives(S.from, S.to) : { reverse: 0, top: [] };
-  let acts = '';
-  if (alt.reverse) acts += `<button class="ex" type="button" id="revBtn">⇅ ${alt.reverse} vol(s) existent dans l'autre sens : <b>${esc(S.to.label)} → ${esc(S.from.label)}</b></button>`;
-  if (alt.top.length) acts += alt.top.slice(0, 4).map(t =>
-    `<button class="ex" type="button" data-dest="${esc(t.cc)}">Depuis <b>${esc(S.from.label)}</b>, vers <b>${esc(t.name)}</b> · ${t.n} vols</button>`).join('');
-  acts += `<a class="ex" href="${S.from && S.to ? faRoute(S.from.aps[0], S.to.aps[0]) : 'https://www.flightaware.com/live/findflight/'}" target="_blank" rel="noopener noreferrer">🔍 Chercher sur <b>FlightAware</b></a>`;
+  let li = '';
+  if (alt.reverse) li += `<li><button type="button" id="rev">Voir les ${alt.reverse} vol${alt.reverse > 1 ? 's' : ''}
+    dans l'autre sens : ${esc(S.to.label)} vers ${esc(S.from.label)}</button></li>`;
+  alt.top.slice(0, 4).forEach(t => {
+    li += `<li><button type="button" data-dest="${esc(t.cc)}">Depuis ${esc(S.from.label)},
+      vers ${esc(t.name)} : ${t.n} vol${t.n > 1 ? 's' : ''}</button></li>`;
+  });
+  li += `<li><a href="${S.from && S.to ? faRoute(S.from.aps[0], S.to.aps[0]) : 'https://www.flightaware.com/live/findflight/'}"
+    target="_blank" rel="noopener noreferrer">Chercher cette liaison sur FlightAware</a></li>`;
+  li += `<li><a href="./aeroports.html">Consulter la liste des aéroports couverts</a></li>`;
 
-  return `<div class="empty"><div class="empty-ic">🧭</div>
-    <div class="empty-t">Aucun vol direct</div>
-    <div class="empty-d">La base ne contient aucun vol sans escale entre
-      <b>${esc(S.from ? S.from.label : '')}</b> (${S.from ? S.from.aps.length : 0} aéroport${S.from && S.from.aps.length > 1 ? 's' : ''})
-      et <b>${esc(S.to ? S.to.label : '')}</b> (${S.to ? S.to.aps.length : 0} aéroport${S.to && S.to.aps.length > 1 ? 's' : ''}).
-      La liaison existe peut-être avec escale.</div>
-    <div class="ex-list">${acts}</div></div>`;
+  return `<div class="empty">
+    <h2>Aucun vol sans escale</h2>
+    <p>La base ne contient aucun vol direct entre <b>${esc(S.from ? S.from.label : '')}</b>
+      et <b>${esc(S.to ? S.to.label : '')}</b>. La liaison existe peut-être avec une escale,
+      que SkySearch ne calcule pas.</p>
+    <ul>${li}</ul></div>`;
 }
 
 function wire() {
   const out = $('out');
   out.querySelectorAll('[data-sort]').forEach(b => b.onclick = () => { S.sort = b.dataset.sort; render(); });
-  const mb = $('moreBtn');
-  if (mb) mb.onclick = () => { S.shown = Math.min(S.shown + PAGE, S.flights.length); render(); };
-  const rb = $('revBtn');
-  if (rb) rb.onclick = () => { swap(); go(); };
+  const m = $('more');
+  if (m) m.onclick = () => { S.shown = Math.min(S.shown + PAGE, S.flights.length); render(); };
+  const rv = $('rev');
+  if (rv) rv.onclick = () => { swap(); go(); };
   const oc = $('openCfg'); if (oc) oc.onclick = openCfg;
   const ul = $('useLocal'); if (ul) ul.onclick = () => { S.error = null; runLocal(); render(); };
   out.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => {
-    const cc = b.dataset.dest, c = CTY[cc];
+    const c = CTY[b.dataset.dest];
     if (!c) return;
-    fieldTo.set({ kind: 'country', label: c.name, code: cc, aps: c.aps.slice(), cc });
+    fieldTo.set({ kind: 'country', label: c.name, code: b.dataset.dest, aps: c.aps.slice(), cc: b.dataset.dest });
     go();
   });
   out.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
-    const f = S.flights.find(x => x.num === b.dataset.copy); if (!f) return;
-    const t = `${f.num} — ${f.depIata} ${fmtHM(f.depMin)} → ${f.arrIata} ${fmtHM(f.arrMin)}${f.dayShift > 0 ? ' +' + f.dayShift + 'j' : ''}${f.dur ? ' · ' + fmtDur(f.dur) : ''}`;
-    try { await navigator.clipboard.writeText(t); b.textContent = 'Copié ✓'; } catch (e) { b.textContent = 'Échec'; }
-    setTimeout(() => b.textContent = 'Copier', 1600);
+    const f = S.flights.find(x => x.num === b.dataset.copy);
+    if (!f) return;
+    const t = `${f.num} · ${f.depIata} ${fmtHM(f.depMin)} vers ${f.arrIata} ${fmtHM(f.arrMin)}`
+      + (f.dayShift > 0 ? ` (+${f.dayShift}j)` : '') + (f.dur ? ` · ${fmtDur(f.dur)}` : '');
+    try { await navigator.clipboard.writeText(t); toast('Copié'); }
+    catch (err) { toast('Copie impossible'); }
   });
 }
 
 function toast(m) {
-  const t = $('toast'); t.textContent = m; t.classList.add('on');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 4200);
+  const t = $('toast');
+  t.textContent = m;
+  t.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('on'), 2600);
 }
 
 /* ---------- Recherche ---------- */
 let busy = false;
+
 function runLocal() {
   S.flights = search(S.from, S.to, S.date);
   S.source = 'local';
@@ -887,49 +876,48 @@ function runLocal() {
 
 async function go() {
   if (busy) return;
-  if (!S.from) { toast('Choisissez un départ'); $('from').focus(); return; }
-  if (!S.to) { toast('Choisissez une arrivée'); $('to').focus(); return; }
+  if (!S.from) { toast('Indiquez un départ'); $('from').focus(); return; }
+  if (!S.to) { toast('Indiquez une arrivée'); $('to').focus(); return; }
   const d = parseYmd($('date').value);
-  if (!d) { toast('Choisissez une date'); $('date').focus(); return; }
+  if (!d) { toast('Indiquez une date'); $('date').focus(); return; }
   S.date = d; S.error = null; S.sort = 'dep';
 
   busy = true;
-  const btn = $('btn'), out = $('out');
-  btn.disabled = true; btn.classList.add('loading');
+  const btn = $('go'), out = $('out');
+  btn.disabled = true;
 
   const broad = S.from.aps.length > API_MAX_AIRPORTS || S.to.aps.length > API_MAX_AIRPORTS;
   if (CFG.ready() && !broad) {
-    out.innerHTML = `<div class="phase"><span class="ph-dot"></span>Interrogation ${esc(PROVIDERS[CFG.provider()].label)}…</div>` + skeleton(3);
+    out.innerHTML = `<p class="loading">Interrogation de ${esc(PROVIDERS[CFG.provider()].label)}…</p>`;
     const r = await fetchLive(S.from, S.to, S.date);
     if (r.ok && r.flights.length) {
-      S.flights = r.flights; S.source = 'live'; S.req = r.req;
+      S.flights = r.flights; S.source = 'live';
       S.shown = Math.min(PAGE, r.flights.length);
-      finish(); return;
+      return finish();
     }
     if (!r.ok && r.reason !== 'off' && r.reason !== 'too-broad') {
       runLocal();
-      if (S.flights.length) { toast(errLabel(r.reason) + ' — repli sur la base embarquée'); }
-      else { S.error = { reason: r.reason, status: r.status, message: r.message }; }
-      finish(); return;
+      if (S.flights.length) toast(errLabel(r.reason) + ', repli sur la base embarquée');
+      else S.error = { reason: r.reason, status: r.status, message: r.message };
+      return finish();
     }
   }
 
-  if (!reduced()) {
-    out.innerHTML = `<div class="phase"><span class="ph-dot"></span>Recherche dans la base…</div>` + skeleton(2);
-    await new Promise(r => setTimeout(r, 220));
-  }
+  out.innerHTML = `<p class="loading">Recherche…</p>`;
   runLocal();
   finish();
 
   function finish() {
     render();
     pushRecent();
-    busy = false; btn.disabled = false; btn.classList.remove('loading');
+    busy = false; btn.disabled = false;
     try {
-      const p = new URLSearchParams({ from: S.from.code, to: S.to.code, date: ymd(S.date) });
-      history.replaceState(null, '', '?' + p);
+      history.replaceState(null, '', '?' + new URLSearchParams({ from: S.from.code, to: S.to.code, date: ymd(S.date) }));
     } catch (e) { }
-    requestAnimationFrame(() => { try { out.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { } });
+    const h = $('out');
+    if (h && h.scrollIntoView) {
+      try { h.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { }
+    }
   }
 }
 
@@ -938,35 +926,40 @@ function swap() {
   fieldFrom.set(b); fieldTo.set(a);
 }
 
-/* ---------- Récents ---------- */
+/* ---------- Recherches récentes ---------- */
 function pushRecent() {
   let r = [];
-  try { r = JSON.parse(safeGet('ss3_recent') || '[]'); } catch (e) { }
-  const entry = { f: S.from.code, fk: S.from.kind, fl: S.from.label, t: S.to.code, tk: S.to.kind, tl: S.to.label };
-  r = [entry, ...r.filter(x => !(x.f === entry.f && x.t === entry.t))].slice(0, 6);
-  safeSet('ss3_recent', JSON.stringify(r));
+  try { r = JSON.parse(safeGet('ss4_recent') || '[]'); } catch (e) { }
+  const e = { f: S.from.code, fk: S.from.kind, fl: S.from.label, t: S.to.code, tk: S.to.kind, tl: S.to.label };
+  r = [e, ...r.filter(x => !(x.f === e.f && x.t === e.t))].slice(0, 6);
+  safeSet('ss4_recent', JSON.stringify(r));
   paintRecent();
 }
 function fromStored(code, kind) {
-  if (kind === 'country' && CTY[code]) { const c = CTY[code]; return { kind: 'country', label: c.name, code, aps: c.aps.slice(), cc: code }; }
-  if (kind === 'city') { const k = Object.keys(CITY).find(k2 => CITY[k2].aps[0] === code); if (k) { const c = CITY[k]; return { kind: 'city', label: c.city, code, aps: c.aps.slice(), cc: c.cc }; } }
-  if (AP[code]) { const a = AP[code]; return { kind: 'airport', label: `${a.c} ${a.n}`, code, aps: [code], cc: a.cc }; }
+  if (kind === 'country' && CTY[code]) {
+    return { kind: 'country', label: CTY[code].name, code, aps: CTY[code].aps.slice(), cc: code };
+  }
+  if (kind === 'city') {
+    const k = Object.keys(CITY).find(x => CITY[x].aps[0] === code);
+    if (k) return { kind: 'city', label: CITY[k].city, code, aps: CITY[k].aps.slice(), cc: CITY[k].cc };
+  }
+  if (AP[code]) return { kind: 'airport', label: `${AP[code].c} ${AP[code].n}`, code, aps: [code], cc: AP[code].cc };
   return null;
 }
 function paintRecent() {
   let r = [];
-  try { r = JSON.parse(safeGet('ss3_recent') || '[]'); } catch (e) { }
+  try { r = JSON.parse(safeGet('ss4_recent') || '[]'); } catch (e) { }
   const wrap = $('recentWrap'), box = $('recent');
   if (!r.length) { wrap.hidden = true; return; }
   wrap.hidden = false;
-  box.innerHTML = r.map((x, i) => `<button class="chip" type="button" data-r="${i}">${esc(x.fl)} → ${esc(x.tl)}</button>`).join('')
-    + `<button class="chip chip-x" type="button" id="clrRecent">Effacer</button>`;
+  box.innerHTML = r.map((x, i) => `<li><button type="button" data-r="${i}">${esc(x.fl)} → ${esc(x.tl)}</button></li>`).join('')
+    + `<li><button type="button" class="clear" id="clrRecent">Effacer</button></li>`;
   box.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
     const x = r[+b.dataset.r];
     const f = fromStored(x.f, x.fk), t = fromStored(x.t, x.tk);
     if (f && t) { fieldFrom.set(f); fieldTo.set(t); go(); }
   });
-  $('clrRecent').onclick = () => { safeSet('ss3_recent', '[]'); paintRecent(); };
+  $('clrRecent').onclick = () => { safeSet('ss4_recent', '[]'); paintRecent(); };
 }
 
 /* ---------- Réglages ---------- */
@@ -975,16 +968,21 @@ function openCfg() {
   $('cfgProvider').value = c.provider || 'local';
   $('cfgKey').value = c.key || '';
   $('cfgProxy').value = c.proxy || '';
-  syncCfg(); $('cfgResult').hidden = true;
-  $('cfg').classList.add('on'); $('cfg').setAttribute('aria-hidden', 'false');
-  setTimeout(() => $('cfgProvider').focus(), 60);
+  syncCfg();
+  $('cfgResult').hidden = true;
+  const d = $('cfg');
+  if (d.showModal) d.showModal(); else d.setAttribute('open', '');
 }
-function closeCfg() { $('cfg').classList.remove('on'); $('cfg').setAttribute('aria-hidden', 'true'); }
+function closeCfg() {
+  const d = $('cfg');
+  if (d.close) d.close(); else d.removeAttribute('open');
+}
 function syncCfg() {
   const p = $('cfgProvider').value, def = PROVIDERS[p], local = p === 'local';
   $('cfgFields').hidden = local;
   $('cfgLocalNote').hidden = !local;
-  $('cfgLocalNote').textContent = `${FL.length.toLocaleString('fr-FR')} vols, ${APL.length} aéroports, ${Object.keys(CTY).length} pays. Aucun appel réseau : horaires théoriques, sans retard ni porte.`;
+  $('cfgLocalNote').innerHTML = `<b>${FL.length.toLocaleString('fr-FR')} vols</b> entre
+    ${APL.length} aéroports de ${Object.keys(CTY).length} pays. Aucun appel réseau.`;
   if (def) {
     $('cfgKeyLabel').textContent = def.keyLabel || 'Clé API';
     $('cfgSignup').href = def.signup || '#';
@@ -996,47 +994,41 @@ function syncCfg() {
 function saveCfg() {
   const p = $('cfgProvider').value;
   CFG.set({ provider: p, key: $('cfgKey').value.trim(), proxy: $('cfgProxy').value.trim() });
-  mem.clear(); paintStatus(); closeCfg();
-  toast(p === 'local' ? 'Base embarquée uniquement' : `${PROVIDERS[p].label} configuré`);
+  mem.clear();
+  paintStatus();
+  closeCfg();
+  toast(p === 'local' ? 'Base embarquée uniquement' : PROVIDERS[p].label + ' enregistré');
   if (S.from && S.to) go();
 }
 async function testCfg() {
-  const b = $('cfgTest'); b.disabled = true; b.textContent = 'Test…';
+  const b = $('cfgTest');
+  b.disabled = true; b.textContent = 'Test en cours…';
   const saved = CFG.get();
   CFG.set({ provider: $('cfgProvider').value, key: $('cfgKey').value.trim(), proxy: $('cfgProxy').value.trim() });
-  const probe = { aps: ['CDG'] }, dest = { aps: ['JFK', 'LHR', 'MAD', 'FCO', 'AMS'] };
-  const r = await fetchLive(probe, dest, new Date());
+  const r = await fetchLive({ aps: ['CDG'] }, { aps: ['JFK', 'LHR', 'MAD', 'FCO', 'AMS'] }, new Date());
   CFG.set(saved);
   b.disabled = false; b.textContent = 'Tester la clé';
-  const box = $('cfgResult'); box.hidden = false;
-  if (r.ok) { box.className = 'cfg-res ok'; box.textContent = `Connexion réussie. ${r.flights.length} vol(s) correspondant au test.`; }
-  else { box.className = 'cfg-res ko'; box.textContent = errLabel(r.reason) + (r.status ? ` (HTTP ${r.status})` : '') + (r.message ? ` — ${r.message}` : ''); }
+  const box = $('cfgResult');
+  box.hidden = false;
+  box.className = 'notice' + (r.ok ? '' : ' warn');
+  box.textContent = r.ok
+    ? `Connexion réussie. ${r.flights.length} vol(s) correspondant au test.`
+    : errLabel(r.reason) + (r.status ? ` (code ${r.status})` : '') + (r.message ? '. ' + r.message : '');
 }
 function paintStatus() {
-  const p = $('statusPill'), t = $('statusTxt');
-  if (!navigator.onLine) { p.className = 'pill pill-off'; t.textContent = 'Hors ligne'; return; }
-  if (CFG.ready()) { p.className = 'pill pill-live'; t.textContent = PROVIDERS[CFG.provider()].label; }
-  else { p.className = 'pill pill-db'; t.textContent = `${FL.length.toLocaleString('fr-FR')} vols`; }
+  const el = $('status');
+  if (!el) return;
+  const base = `${FL.length.toLocaleString('fr-FR')} vols · ${APL.length} aéroports · ${Object.keys(CTY).length} pays`;
+  if (!navigator.onLine) el.textContent = base + ' · hors ligne';
+  else if (CFG.ready()) el.textContent = base + ' · temps réel via ' + PROVIDERS[CFG.provider()].label;
+  else el.textContent = base;
 }
 
 /* ---------- Initialisation ---------- */
-(function stars() {
-  if (reduced()) return;
-  const s = $('starsEl'), fr = document.createDocumentFragment();
-  for (let i = 0; i < 55; i++) {
-    const el = document.createElement('div'), sz = Math.random() < .8 ? 1 : 2;
-    el.className = 'star';
-    el.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random() * 100}%;top:${Math.random() * 100}%;opacity:0;animation:blink ${2 + Math.random() * 4}s ease-in-out ${-Math.random() * 6}s infinite`;
-    fr.appendChild(el);
-  }
-  s.appendChild(fr);
-})();
-
 $('date').value = ymd(new Date());
-$('date').min = ymd(new Date(Date.now() - 86400000 * 2));
 $('form').addEventListener('submit', e => { e.preventDefault(); go(); });
-$('swapBtn').onclick = swap;
-document.querySelectorAll('#chips [data-f]').forEach(b => b.onclick = () => {
+$('swap').onclick = swap;
+document.querySelectorAll('.shortcuts [data-f]').forEach(b => b.onclick = () => {
   const f = resolve(b.dataset.f), t = resolve(b.dataset.t);
   if (f && t) { fieldFrom.set(f); fieldTo.set(t); go(); }
 });
@@ -1045,10 +1037,9 @@ $('cfgClose').onclick = closeCfg;
 $('cfgSave').onclick = saveCfg;
 $('cfgTest').onclick = testCfg;
 $('cfgProvider').onchange = () => { syncCfg(); $('cfgResult').hidden = true; };
-$('cfg').addEventListener('click', e => { if (e.target === $('cfg')) closeCfg(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('cfg').classList.contains('on')) closeCfg(); });
 
-paintRecent(); paintStatus();
+paintRecent();
+paintStatus();
 window.addEventListener('online', paintStatus);
 window.addEventListener('offline', paintStatus);
 
@@ -1066,25 +1057,6 @@ window.addEventListener('offline', paintStatus);
   } catch (e) { }
 })();
 
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); deferredPrompt = e;
-  if (safeGet('ss3_install_hidden')) return;
-  $('installTxt').innerHTML = 'Installez SkySearch pour un accès hors ligne.';
-  $('installBtn').hidden = false; $('installBanner').classList.add('on');
-});
-$('installBtn').onclick = async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt(); await deferredPrompt.userChoice;
-  deferredPrompt = null; $('installBanner').classList.remove('on');
-};
-$('installClose').onclick = () => { $('installBanner').classList.remove('on'); safeSet('ss3_install_hidden', '1'); };
-(function iosBanner() {
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandalone() && !safeGet('ss3_install_hidden')) {
-    $('installTxt').innerHTML = "Installer : <b>Partager ↑</b> puis <b>Sur l'écran d'accueil</b>";
-    $('installBanner').classList.add('on');
-  }
-})();
-
-if ('serviceWorker' in navigator)
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => { }));
+}

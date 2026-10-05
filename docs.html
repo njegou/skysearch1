@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Documentation — SkySearch</title>
+<meta name="description" content="Comment fonctionne SkySearch : saisie, base de données, calcul des horaires, mode temps réel, proxy.">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SkySearch">
+<link rel="icon" href="./icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.svg">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="./index.html">SkySearch <small>horaires de vols</small></a>
+    <nav class="main" aria-label="Navigation principale">
+      <ul>
+        <li><a href="./index.html">Recherche</a></li>
+        <li><a href="./aeroports.html">Aéroports</a></li>
+        <li><a href="./docs.html" aria-current="page">Docs</a></li>
+        <li><a href="./objectif.html">Objectif</a></li>
+        <li><a href="./contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+  <h1>Documentation</h1>
+  <p class="lead">Ce que fait SkySearch, comment il le fait, et où sont ses limites.</p>
+
+  <nav aria-label="Sommaire">
+    <ul class="body">
+      <li><a href="#saisie">Saisir une recherche</a></li>
+      <li><a href="#donnees">La base de données</a></li>
+      <li><a href="#horaires">Comment les horaires sont calculés</a></li>
+      <li><a href="#temps-reel">Mode temps réel</a></li>
+      <li><a href="#proxy">Le proxy</a></li>
+      <li><a href="#liens">Liens de partage</a></li>
+      <li><a href="#hors-ligne">Hors ligne et installation</a></li>
+      <li><a href="#limites">Limites</a></li>
+      <li><a href="#contribuer">Modifier la base</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="saisie">Saisir une recherche</h2>
+  <p>Les champs de départ et d'arrivée acceptent trois niveaux de précision.</p>
+  <dl class="facts">
+    <div><dt>Un pays</dt><dd><code>France</code> interroge les 22 aéroports français,
+      <code>Grèce</code> les 10 aéroports grecs.</dd></div>
+    <div><dt>Une ville</dt><dd><code>Paris</code> interroge CDG et ORY,
+      <code>Londres</code> ses cinq aéroports.</dd></div>
+    <div><dt>Un aéroport</dt><dd><code>CDG</code> ou <code>Charles de Gaulle</code>
+      n'interroge que celui-là.</dd></div>
+  </dl>
+  <p>Sous chaque champ, une ligne indique quels aéroports vont être interrogés. C'est le moyen
+    de vérifier que la saisie a été comprise avant de lancer la recherche.</p>
+
+  <h3>Graphies acceptées</h3>
+  <p>Les accents et la casse sont ignorés : <code>grece</code>, <code>Grèce</code> et
+    <code>GRÈCE</code> donnent le même résultat. Les noms anglais fonctionnent
+    (<code>Spain</code>, <code>Greece</code>), ainsi que les graphies locales et les anciens noms
+    de villes : <code>Köln</code>, <code>Wien</code>, <code>Milano</code>, <code>Bombay</code>,
+    <code>Saigon</code>, <code>Peking</code>, <code>Majorque</code>, <code>Tahiti</code>,
+    <code>Corse</code>.</p>
+
+  <h3>Un piège sur les codes de trois lettres</h3>
+  <p>Certains codes IATA sont aussi des mots français : <code>VIE</code>, <code>LIS</code>,
+    <code>SIN</code>, <code>DEL</code>, <code>MAD</code>, <code>MEL</code>. Ces codes ne sont
+    reconnus qu'en majuscules, pour éviter qu'une saisie comme « vie » soit interprétée comme
+    Vienne.</p>
+
+  <h2 id="donnees">La base de données</h2>
+  <dl class="facts">
+    <div><dt>Aéroports</dt><dd>317, répartis sur 100 pays</dd></div>
+    <div><dt>Compagnies</dt><dd>127</dd></div>
+    <div><dt>Vols</dt><dd>14 222</dd></div>
+    <div><dt>Routes</dt><dd>13 280, toutes dans les deux sens</dd></div>
+    <div><dt>Paires de pays desservies</dt><dd>7 246</dd></div>
+    <div><dt>Poids</dt><dd>450 Ko, soit 179 Ko compressés</dd></div>
+  </dl>
+  <p>La base est embarquée dans la page. Aucune requête réseau n'est nécessaire pour chercher
+    un vol, ce qui explique que l'application fonctionne hors ligne une fois chargée.</p>
+  <p><b>Les horaires sont plausibles, pas réels.</b> Les routes, les fréquences et les numéros
+    de vol sont générés à partir de la géographie, de l'importance des aéroports et des
+    compagnies nationales de chaque pays. Ils respectent des contraintes physiques vérifiées,
+    mais ne correspondent pas aux programmes publiés par les compagnies.
+    Pour des données réelles, voir <a href="#temps-reel">le mode temps réel</a>.</p>
+
+  <h2 id="horaires">Comment les horaires sont calculés</h2>
+  <p>Un vol est stocké comme ceci :</p>
+  <pre><code>AF6019 → ['CDG', 'NRT', 1411, 807, 'B777-300ER', '2E', '1']
+//        dép    arr   23:31  13h27  appareil    terminaux</code></pre>
+  <p><b>Aucune heure d'arrivée n'est enregistrée.</b> Chaque vol porte seulement son heure de
+    départ locale et sa durée bloc. L'arrivée, le décalage de jour, le libellé de fuseau et la
+    distance sont recalculés à chaque affichage, à partir des fuseaux horaires IANA.</p>
+  <p>Cette contrainte a une conséquence utile : une durée ne peut pas contredire les horaires
+    affichés, puisque les horaires en découlent. Le changement d'heure est géré sans
+    intervention. Le même vol Paris-New York affiche <code>UTC+1 → EDT</code> le 28 mars
+    et <code>UTC+2 → EDT</code> le 29.</p>
+  <p>Les durées sont dérivées de la distance orthodromique entre les deux aéroports, puis
+    validées contre une enveloppe de vitesse réaliste. Les 14 222 vols passent ce contrôle.</p>
+  <p>Un vol parti après minuit et arrivant le même jour ne porte pas de mention de décalage.
+    À l'inverse, un Sydney-Los Angeles arrive à une heure locale antérieure à son départ, et
+    s'affiche sans décalage de jour : c'est correct, le vol traverse la ligne de changement
+    de date.</p>
+
+  <h2 id="temps-reel">Mode temps réel</h2>
+  <p>Par défaut, SkySearch n'interroge aucun service externe. Le bouton
+    <b>Source des données</b> en pied de page permet de renseigner une clé chez un fournisseur,
+    ce qui donne accès aux vols réels du jour avec statut, retard, porte d'embarquement et
+    tapis bagages.</p>
+  <dl class="facts">
+    <div><dt>AeroDataBox</dt><dd>statut, retards, portes, terminaux, tapis.
+      Clé via RapidAPI, offre gratuite limitée puis à partir de 5 $ par mois.</dd></div>
+    <div><dt>Aviationstack</dt><dd>statut, retards, terminaux. L'offre gratuite ne sert
+      qu'en HTTP, ce qu'un navigateur refuse depuis une page HTTPS :
+      <a href="#proxy">le proxy</a> est alors obligatoire.</dd></div>
+  </dl>
+
+  <h3>La règle des deux aéroports</h3>
+  <p>Une recherche <code>France → Grèce</code> couvre 22 × 10 aéroports. Interroger le
+    fournisseur demanderait 22 appels pour une seule recherche, ce qui épuiserait n'importe
+    quel quota en quelques minutes.</p>
+  <p>SkySearch ne le fait pas : <b>au-delà de deux aéroports d'un côté ou de l'autre, la base
+    embarquée répond seule</b>, et les résultats le signalent. Pour obtenir les vols réels,
+    il faut préciser une ville ou un aéroport.</p>
+
+  <h3>Où va votre clé</h3>
+  <p>SkySearch est une page statique : elle ne peut rien dissimuler. La clé est conservée dans
+    le stockage local de votre navigateur et transmise uniquement au fournisseur choisi. Elle
+    n'apparaît jamais dans le code du dépôt.</p>
+  <p class="notice warn"><b>Attention si vous publiez votre propre version.</b> Une clé saisie
+    dans un navigateur est lisible par toute personne qui ouvre les outils de développement.
+    Tant que chaque utilisateur saisit sa propre clé, le modèle tient. Si vous diffusez
+    l'application avec votre clé, déployez <a href="#proxy">le proxy</a>.</p>
+
+  <h3>Comportement en cas d'échec</h3>
+  <dl class="facts">
+    <div><dt>Clé refusée, quota, délai dépassé</dt><dd>bascule sur la base embarquée,
+      avec un message</dd></div>
+    <div><dt>Appel bloqué par le navigateur</dt><dd>même bascule, avec une suggestion
+      d'activer le proxy</dd></div>
+    <div><dt>Réponse vide</dt><dd>la base est consultée avant d'annoncer un échec</dd></div>
+    <div><dt>Hors ligne</dt><dd>base seule</dd></div>
+  </dl>
+  <p>Les réponses du fournisseur sont conservées quatre-vingt-dix secondes, en mémoire et sur
+    disque, pour éviter de consommer le quota sur des recherches répétées.</p>
+
+  <h2 id="proxy">Le proxy</h2>
+  <p>Le fichier <code>worker.js</code> du dépôt est un Worker Cloudflare prêt à déployer. Il
+    règle trois problèmes à la fois : la clé reste côté serveur, les en-têtes CORS manquants
+    sont ajoutés, et les fournisseurs qui n'exposent que HTTP sont réécrits en HTTPS.</p>
+  <pre><code>npm i -g wrangler
+wrangler init skysearch-proxy
+# remplacer src/index.js par worker.js
+wrangler secret put AERODATABOX_KEY
+wrangler deploy</code></pre>
+  <p>Collez ensuite l'URL du Worker dans le champ <b>Proxy</b> des réglages et laissez le champ
+    de clé vide. Le Worker maintient une liste blanche d'hôtes autorisés : sans elle, il
+    deviendrait un relais ouvert utilisable par n'importe qui.</p>
+
+  <h2 id="liens">Liens de partage</h2>
+  <p>Une recherche se partage par son adresse. Les paramètres acceptent un code pays, un code
+    IATA ou un nom.</p>
+  <pre><code>index.html?from=FR&amp;to=GR&amp;date=2026-10-05
+index.html?from=CDG&amp;to=JFK
+aeroports.html?q=Grèce</code></pre>
+
+  <h2 id="hors-ligne">Hors ligne et installation</h2>
+  <p>Un service worker met en cache la page, la base et les scripts au premier chargement.
+    Les recherches suivantes fonctionnent sans connexion, en mode base embarquée.</p>
+  <p>Sur iPhone, l'installation passe par <b>Partager</b> puis <b>Sur l'écran d'accueil</b>.
+    Sur Android et sur ordinateur, le navigateur propose l'installation directement.</p>
+  <p>Le mode hors ligne exige un service worker, donc une page servie en HTTP ou HTTPS.
+    Ouvrir le fichier directement depuis le disque ne suffit pas.</p>
+
+  <h2 id="limites">Limites</h2>
+  <ul class="body">
+    <li><b>Horaires générés.</b> Plausibles et géographiquement cohérents, mais pas conformes
+      aux programmes réels des compagnies.</li>
+    <li><b>Numéros de vol générés.</b> Le lien « statut en direct » peut ne rien trouver pour
+      un vol issu de la base. En mode temps réel, les numéros viennent du fournisseur et les
+      liens fonctionnent.</li>
+    <li><b>Vols sans escale uniquement.</b> Aucun calcul de correspondance. Une liaison absente
+      des résultats existe souvent avec une escale.</li>
+    <li><b>Aucun prix.</b> Voir <a href="./objectif.html#prix">la page Objectif</a> pour les
+      raisons.</li>
+    <li><b>Pas de sièges, pas de réservation.</b> SkySearch informe, il ne vend rien.</li>
+  </ul>
+
+  <h2 id="contribuer">Modifier la base</h2>
+  <p>La base est générée, pas écrite à la main. Le dossier <code>tools/</code> du dépôt contient
+    trois scripts Python.</p>
+  <dl class="facts">
+    <div><dt><code>airports.py</code></dt><dd>le registre des aéroports, des pays et des
+      alias de villes</dd></div>
+    <div><dt><code>genflights.py</code></dt><dd>construit le réseau de routes, les fréquences,
+      les durées, et valide le tout</dd></div>
+    <div><dt><code>encode.py</code></dt><dd>produit <code>data.js</code></dd></div>
+  </dl>
+  <pre><code>cd tools
+python3 genflights.py
+python3 encode.py</code></pre>
+  <p>Ajouter un aéroport demande son code IATA, sa ville, le nom de l'aéroport, son pays, ses
+    coordonnées, son fuseau IANA et un rang de hub de 1 à 3. Le générateur s'occupe du reste :
+    routes, durées, compagnies, numéros de vol.</p>
+  <p>Ne modifiez pas <code>data.js</code> directement, il est écrasé à chaque génération.</p>
+
+</div>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <p>Horaires indicatifs, sans valeur contractuelle.
+      <a href="./contact.html">Proposer une fonctionnalité</a> ·
+      <a href="https://github.com/njegou/skysearch1" target="_blank" rel="noopener noreferrer">Code source</a></p>
+  </div>
+</footer>
+</body>
+</html>

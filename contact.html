@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contact — SkySearch</title>
+<meta name="description" content="Proposer une fonctionnalité, signaler un aéroport manquant ou une donnée incorrecte.">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SkySearch">
+<link rel="icon" href="./icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.svg">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="./index.html">SkySearch <small>horaires de vols</small></a>
+    <nav class="main" aria-label="Navigation principale">
+      <ul>
+        <li><a href="./index.html">Recherche</a></li>
+        <li><a href="./aeroports.html">Aéroports</a></li>
+        <li><a href="./docs.html">Docs</a></li>
+        <li><a href="./objectif.html">Objectif</a></li>
+        <li><a href="./contact.html" aria-current="page">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+  <h1>Proposer une fonctionnalité</h1>
+  <p class="lead">Une idée, un aéroport manquant, un horaire qui paraît faux.
+    Tout retour est utile.</p>
+
+  <p class="notice"><b>Comment ça marche.</b> SkySearch est un site statique, sans serveur pour
+    recevoir un message. Ce formulaire met votre proposition en forme et ouvre une
+    <i>issue</i> pré-remplie sur le dépôt GitHub du projet. Rien n'est envoyé avant que vous
+    validiez la création sur GitHub, et vous pouvez tout relire d'ici là. Un compte GitHub est
+    nécessaire, il est gratuit. Sans compte, utilisez <b>Copier le texte</b> et transmettez-le
+    comme vous voulez.</p>
+
+  <form id="form">
+    <div class="field">
+      <label for="type">Type de demande</label>
+      <select id="type">
+        <option value="feature">Nouvelle fonctionnalité</option>
+        <option value="airport">Aéroport manquant</option>
+        <option value="data">Donnée incorrecte</option>
+        <option value="bug">Dysfonctionnement</option>
+        <option value="other">Autre</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="title">Résumé en une ligne</label>
+      <input type="text" id="title" maxlength="120"
+        placeholder="Ajouter les aéroports de Pologne"
+        enterkeyhint="next">
+      <p class="hint">Quatre caractères minimum.</p>
+    </div>
+
+    <div class="field">
+      <label for="body">Description</label>
+      <textarea id="body" rows="7" maxlength="4000"
+        placeholder="Ce que vous attendez, et pourquoi. S'il s'agit d'une donnée incorrecte, indiquez le numéro de vol et ce qui vous semble faux."></textarea>
+      <p class="hint">Dix caractères minimum. Soyez concret, c'est ce qui rend une demande
+        traitable.</p>
+    </div>
+
+    <div class="field">
+      <label for="who">Votre nom ou pseudo (optionnel)</label>
+      <input type="text" id="who" maxlength="60" placeholder="Laissez vide pour rester anonyme"
+        autocapitalize="words">
+      <p class="hint">Attention : une issue GitHub est publique. N'indiquez rien que vous ne
+        souhaitez pas voir en ligne, et pas d'adresse personnelle.</p>
+    </div>
+
+    <button type="submit" class="primary" id="send" disabled>Ouvrir sur GitHub</button>
+    <div class="row2" style="margin-top:.5rem">
+      <button type="button" class="ghost" id="copy" disabled>Copier le texte</button>
+      <button type="button" class="ghost" id="reset">Tout effacer</button>
+    </div>
+
+    <p class="notice" id="formNote" hidden></p>
+  </form>
+
+  <h2>Aperçu</h2>
+  <p class="hint">Ce qui sera transmis, exactement.</p>
+  <pre><code id="preview"></code></pre>
+
+  <h2>Ce qui aide le plus</h2>
+  <dl class="facts">
+    <div><dt>Un aéroport manquant</dt><dd>donnez son code IATA et sa ville.
+      La <a href="./aeroports.html">liste actuelle</a> indique ce qui est déjà couvert.</dd></div>
+    <div><dt>Un horaire douteux</dt><dd>donnez le numéro de vol affiché et ce qui vous paraît
+      faux. Notez que les horaires de la base sont générés et ne reflètent pas les programmes
+      réels, c'est <a href="./docs.html#limites">une limite connue</a>.</dd></div>
+    <div><dt>Un dysfonctionnement</dt><dd>indiquez votre navigateur, votre appareil, et la
+      recherche exacte qui pose problème. Un lien de résultat suffit souvent, il contient
+      tous les paramètres.</dd></div>
+    <div><dt>Une fonctionnalité</dt><dd>décrivez le besoin plutôt que la solution.
+      « Je ne sais pas quelles compagnies desservent cette ligne » est plus exploitable que
+      « ajoutez un filtre par compagnie ».</dd></div>
+  </dl>
+
+  <h2>Demandes déjà écartées</h2>
+  <p>Inutile de les proposer, les raisons sont documentées sur
+    <a href="./objectif.html">la page Objectif</a> : affichage des prix, réservation,
+    calcul de correspondances, carte de suivi en direct.</p>
+
+  <h2>Suivre le projet</h2>
+  <p>Le code, les issues ouvertes et l'historique des versions sont sur
+    <a href="https://github.com/njegou/skysearch1" target="_blank" rel="noopener noreferrer">le dépôt GitHub</a>.</p>
+
+</div>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <p>Horaires indicatifs, sans valeur contractuelle.
+      <a href="./docs.html">Documentation</a> ·
+      <a href="https://github.com/njegou/skysearch1" target="_blank" rel="noopener noreferrer">Code source</a></p>
+  </div>
+</footer>
+
+<script src="./contact.js"></script>
+</body>
+</html>

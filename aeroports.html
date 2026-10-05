@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aéroports couverts — SkySearch</title>
+<meta name="description" content="Liste des 317 aéroports et 100 pays couverts par SkySearch, avec le nombre de vols au départ et à l'arrivée.">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SkySearch">
+<link rel="icon" href="./icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.svg">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="./index.html">SkySearch <small>horaires de vols</small></a>
+    <nav class="main" aria-label="Navigation principale">
+      <ul>
+        <li><a href="./index.html">Recherche</a></li>
+        <li><a href="./aeroports.html" aria-current="page">Aéroports</a></li>
+        <li><a href="./docs.html">Docs</a></li>
+        <li><a href="./objectif.html">Objectif</a></li>
+        <li><a href="./contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+  <h1>Aéroports couverts</h1>
+  <p class="lead">Tout aéroport de cette liste peut servir de départ ou d'arrivée.
+    Saisir un pays dans la recherche interroge l'ensemble de ses aéroports.</p>
+
+  <div class="field">
+    <label for="filter">Filtrer</label>
+    <input type="text" id="filter" placeholder="Code IATA, ville, aéroport ou pays"
+      spellcheck="false" autocapitalize="none" enterkeyhint="search">
+    <p class="hint"><button type="button" class="ghost" id="clear" style="padding:.25rem .5rem;min-height:0;font-size:.8rem">Effacer le filtre</button></p>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <caption id="count"></caption>
+      <thead>
+        <tr>
+          <th scope="col" data-k="iata">IATA</th>
+          <th scope="col" data-k="city">Ville et aéroport</th>
+          <th scope="col" data-k="country" aria-sort="ascending">Pays</th>
+          <th scope="col" data-k="dep" style="text-align:right">Départs</th>
+          <th scope="col" class="opt" style="text-align:right">Arrivées</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <h2>Comment lire ce tableau</h2>
+  <p>Les colonnes <b>Départs</b> et <b>Arrivées</b> comptent les vols de la base embarquée, pas
+    le trafic réel de l'aéroport. Un aéroport régional avec deux départs est relié au hub de son
+    pays, rien de plus.</p>
+  <p>Les en-têtes de colonne sont cliquables pour trier. Le tri par départs permet de repérer
+    les aéroports les mieux desservis.</p>
+
+  <h2>Ce que la couverture n'est pas</h2>
+  <p>Ces 317 aéroports sont une sélection, pas un annuaire mondial. Il en existe plusieurs milliers
+    ouverts au trafic commercial. Le choix privilégie les hubs internationaux, les aéroports
+    majeurs de chaque pays, et une desserte régionale pour la France, l'Espagne, l'Italie,
+    l'Allemagne, le Royaume-Uni et la Grèce.</p>
+  <p>Si un aéroport vous manque, <a href="./contact.html">signalez-le</a>.</p>
+
+</div>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <p>Horaires indicatifs, sans valeur contractuelle.
+      <a href="./docs.html">Documentation</a> ·
+      <a href="./contact.html">Proposer une fonctionnalité</a> ·
+      <a href="https://github.com/njegou/skysearch1" target="_blank" rel="noopener noreferrer">Code source</a></p>
+  </div>
+</footer>
+
+<script src="./data.js"></script>
+<script src="./aeroports.js"></script>
+</body>
+</html>

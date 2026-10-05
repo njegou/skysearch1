@@ -1,7 +1,7 @@
 {
   "name": "SkySearch — Horaires de vols",
   "short_name": "SkySearch",
-  "description": "Recherche de vols par pays, ville ou aéroport, sur une base embarquée de 14 000 vols.",
+  "description": "Recherche d'horaires de vols par pays, ville ou aéroport.",
   "id": "/skysearch1/",
   "start_url": "./index.html",
   "scope": "./",
@@ -11,8 +11,8 @@
     "minimal-ui",
     "browser"
   ],
-  "background_color": "#060810",
-  "theme_color": "#060810",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "lang": "fr",
   "dir": "ltr",
@@ -42,14 +42,14 @@
   ],
   "shortcuts": [
     {
-      "name": "France vers Grèce",
-      "short_name": "FR → GR",
-      "url": "./index.html?from=FR&to=GR"
+      "name": "Aéroports couverts",
+      "short_name": "Aéroports",
+      "url": "./aeroports.html"
     },
     {
-      "name": "Paris vers New York",
-      "short_name": "CDG → JFK",
-      "url": "./index.html?from=CDG&to=JFK"
+      "name": "Documentation",
+      "short_name": "Docs",
+      "url": "./docs.html"
     }
   ]
 }

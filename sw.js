@@ -3,15 +3,22 @@
    une version périmée de l'app), assets cache-first, polices en
    stale-while-revalidate, repli hors ligne propre. */
 
-const VERSION = 'v4.0.0';
+const VERSION = 'v5.0.0';
 const APP_CACHE = `skysearch-app-${VERSION}`;
 const RUNTIME_CACHE = `skysearch-runtime-${VERSION}`;
 
 const APP_SHELL = [
   './',
   './index.html',
-  './data.js',
+  './aeroports.html',
+  './docs.html',
+  './objectif.html',
+  './contact.html',
+  './style.css',
   './app.js',
+  './aeroports.js',
+  './contact.js',
+  './data.js',
   './manifest.json',
   './icon-192.svg',
   './icon-512.svg',

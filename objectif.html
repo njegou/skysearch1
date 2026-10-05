@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Objectif et besoin — SkySearch</title>
+<meta name="description" content="Pourquoi SkySearch existe, ce qu'il cherche à résoudre, et ce qu'il ne fera pas.">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SkySearch">
+<link rel="icon" href="./icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.svg">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="./index.html">SkySearch <small>horaires de vols</small></a>
+    <nav class="main" aria-label="Navigation principale">
+      <ul>
+        <li><a href="./index.html">Recherche</a></li>
+        <li><a href="./aeroports.html">Aéroports</a></li>
+        <li><a href="./docs.html">Docs</a></li>
+        <li><a href="./objectif.html" aria-current="page">Objectif</a></li>
+        <li><a href="./contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+  <h1>Objectif et besoin</h1>
+  <p class="lead">SkySearch répond à une question précise : quelles liaisons aériennes existent
+    entre deux endroits. Pas quel billet acheter.</p>
+
+  <h2>Le besoin</h2>
+  <p>Les comparateurs de vols sont conçus pour vendre. Ils demandent une date exacte, un aéroport
+    exact, un nombre de passagers, puis affichent des prix entourés de bandeaux, de comptes à
+    rebours et de mentions de rareté. Ils répondent très bien à « je veux acheter ce vol », et
+    assez mal à une question plus simple.</p>
+  <p>Cette question est celle de l'existence d'une liaison. Est-ce qu'on peut aller de France en
+    Grèce sans escale, et depuis quels aéroports. Qui opère la ligne. Combien de temps dure le
+    vol. À quelle heure locale on arrive.</p>
+  <p>Pour y répondre sur un comparateur, il faut lancer une recherche par aéroport de départ, et
+    recommencer pour chacun. SkySearch prend le problème dans l'autre sens.</p>
+
+  <h2>Le parti pris</h2>
+  <p>Un pays saisi au départ interroge <b>tous</b> ses aéroports d'un coup. C'est la
+    fonctionnalité centrale, et tout le reste en découle : la base est locale pour que ce balayage
+    soit instantané, et l'interface se limite à trois champs parce que la question n'en demande
+    pas plus.</p>
+  <dl class="facts">
+    <div><dt>Informer, pas convertir</dt><dd>aucune publicité, aucun lien affilié,
+      aucun suivi, aucune incitation à l'achat</dd></div>
+    <div><dt>Répondre vite</dt><dd>base embarquée, recherche instantanée,
+      fonctionnement hors ligne</dd></div>
+    <div><dt>Dire d'où viennent les chiffres</dt><dd>chaque résultat indique sa source et
+      ses limites</dd></div>
+    <div><dt>Rester lisible</dt><dd>une page de consultation, pas une vitrine</dd></div>
+  </dl>
+
+  <h2>Pourquoi un design aussi sobre</h2>
+  <p>Une interface qui cherche à retenir l'attention entre en conflit avec son contenu. Pour un
+    horaire, ce qui compte est le contraste, la taille du texte et l'ordre de lecture.
+    Les dégradés, les animations et les effets de profondeur ne rendent pas un horaire plus
+    lisible, ils ajoutent du bruit entre la question et la réponse.</p>
+  <p>Le choix retenu est donc celui d'un document : typographie système, une seule couleur
+    d'accent, des lignes de texte plutôt que des cartes décorées. Le thème sombre suit le
+    réglage du système, il ne se choisit pas dans l'application.</p>
+
+  <h2 id="prix">Pourquoi il n'y a pas de prix</h2>
+  <p>C'est la fonctionnalité la plus demandée, et celle qui bute sur un obstacle extérieur au
+    projet. Les prix de vols ne sont pas des données ouvertes : ils appartiennent aux compagnies
+    et aux systèmes de distribution, qui les diffusent sous contrat.</p>
+  <p>État des accès en 2026 :</p>
+  <dl class="facts">
+    <div><dt>Amadeus Self-Service</dt><dd>fermé le 17 juillet 2026. C'était la seule offre
+      gratuite sérieuse. L'accès entreprise exige une accréditation IATA ou ARC.</dd></div>
+    <div><dt>Kiwi Tequila</dt><dd>sur invitation, et le passage par un partenaire demande
+      50 000 utilisateurs mensuels</dd></div>
+    <div><dt>Skyscanner</dt><dd>partenariat commercial, pas d'offre publique</dd></div>
+    <div><dt>Duffel</dt><dd>bac à sable avec des prix fictifs ; en production,
+      facturation à la commande</dd></div>
+    <div><dt>Travelpayouts</dt><dd>prix en cache, modèle d'affiliation. Techniquement le plus
+      accessible, mais les données sont différées et le modèle suppose de rémunérer le site
+      à la réservation, ce qui réintroduit exactement ce que ce projet évite.</dd></div>
+  </dl>
+  <p>Afficher des prix mis en cache plusieurs jours, ou des prix de démonstration, serait pire
+    que de ne rien afficher : l'information paraîtrait fiable sans l'être. Tant qu'il n'existe
+    pas d'accès gratuit à des tarifs réels, SkySearch n'affiche pas de prix.</p>
+
+  <h2>Ce que SkySearch ne fera pas</h2>
+  <ul class="body">
+    <li><b>Vendre ou réserver.</b> Cela demande une accréditation, un moyen de paiement, un
+      service client et une responsabilité juridique.</li>
+    <li><b>Calculer des correspondances.</b> Un moteur de correspondances doit connaître les
+      temps de connexion minimaux par aéroport, les accords entre compagnies et la validité des
+      billets combinés. C'est un autre produit.</li>
+    <li><b>Suivre les avions en direct sur une carte.</b> Flightradar24 et FlightAware le font
+      déjà très bien. Chaque vol renvoie vers eux.</li>
+    <li><b>Collecter des données personnelles.</b> Aucun compte, aucun cookie de suivi. Les
+      recherches récentes et la clé d'API éventuelle restent dans le navigateur.</li>
+  </ul>
+
+  <h2>État du projet</h2>
+  <p>SkySearch est un projet personnel, sans engagement de service ni garantie de disponibilité.
+    Les horaires de la base sont indicatifs et n'ont aucune valeur contractuelle. Avant un
+    déplacement réel, la seule source valable reste la compagnie aérienne.</p>
+  <p>Le code est public. Les propositions de fonctionnalités passent par
+    <a href="./contact.html">la page contact</a>.</p>
+
+</div>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <p>Horaires indicatifs, sans valeur contractuelle.
+      <a href="./docs.html">Documentation</a> ·
+      <a href="https://github.com/njegou/skysearch1" target="_blank" rel="noopener noreferrer">Code source</a></p>
+  </div>
+</footer>
+</body>
+</html>
