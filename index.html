@@ -134,18 +134,22 @@
         <a id="cfgSignup" href="#" target="_blank" rel="noopener noreferrer">Créer un compte</a> ·
         <a id="cfgDoc" href="#" target="_blank" rel="noopener noreferrer">Documentation</a></p>
     </div>
-    <div class="field">
-      <label for="cfgProxy">Proxy (optionnel)</label>
-      <input type="url" id="cfgProxy" placeholder="https://mon-worker.workers.dev" spellcheck="false">
-      <p class="hint">Nécessaire si le fournisseur bloque les appels navigateur,
-        et <b>obligatoire pour afficher les prix</b>.
-        Voir <a href="./docs.html#prix">la documentation</a>.</p>
-    </div>
     <p class="notice" id="cfgResult" hidden></p>
   </div>
 
+  <hr style="margin:1.25rem 0">
+
+  <div class="field">
+    <label for="cfgProxy">Proxy (optionnel)</label>
+    <input type="url" id="cfgProxy" placeholder="https://mon-worker.workers.dev" spellcheck="false">
+    <p class="hint">Un Worker Cloudflare qui garde vos clés côté serveur.
+      <b>Obligatoire pour afficher les prix</b>, et utile si un fournisseur d'horaires
+      bloque les appels navigateur. Voir <a href="./docs.html#prix">la documentation</a>.</p>
+    <p class="notice" id="cfgProxyState" hidden></p>
+  </div>
+
   <div class="row2" style="margin-top:1rem">
-    <button type="button" class="ghost" id="cfgTest">Tester la clé</button>
+    <button type="button" class="ghost" id="cfgTest">Tester</button>
     <button type="button" class="primary" id="cfgSave">Enregistrer</button>
   </div>
   <div style="margin-top:.5rem">

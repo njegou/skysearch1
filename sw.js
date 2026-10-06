@@ -3,7 +3,7 @@
    une version périmée de l'app), assets cache-first, polices en
    stale-while-revalidate, repli hors ligne propre. */
 
-const VERSION = 'v6.0.0';
+const VERSION = 'v6.1.0';
 const APP_CACHE = `skysearch-app-${VERSION}`;
 const RUNTIME_CACHE = `skysearch-runtime-${VERSION}`;
 

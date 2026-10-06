@@ -1188,6 +1188,8 @@ function closeCfg() {
 }
 function syncCfg() {
   const p = $('cfgProvider').value, def = PROVIDERS[p], local = p === 'local';
+  /* Seuls les champs liés au fournisseur d'horaires se masquent. Le proxy
+     reste visible : il sert aux prix, qui ne dépendent pas de ce choix. */
   $('cfgFields').hidden = local;
   $('cfgLocalNote').hidden = !local;
   $('cfgLocalNote').innerHTML = `<b>${FL.length.toLocaleString('fr-FR')} vols</b> entre
@@ -1199,6 +1201,23 @@ function syncCfg() {
     $('cfgNote').textContent = def.note || '';
     $('cfgNote').hidden = !def.note;
   }
+  paintProxyState();
+}
+
+function paintProxyState() {
+  const el = $('cfgProxyState');
+  if (!el) return;
+  const v = ($('cfgProxy').value || '').trim();
+  if (!v) {
+    el.hidden = false;
+    el.className = 'notice';
+    el.textContent = "Sans proxy, aucun prix n'est affiché.";
+    return;
+  }
+  el.hidden = false;
+  el.className = 'notice';
+  el.innerHTML = 'Prix activés, pour les trajets visant un seul aéroport de chaque côté. '
+    + 'Utilisez <b>Tester</b> pour vérifier le proxy.';
 }
 function saveCfg() {
   const p = $('cfgProvider').value;
@@ -1211,14 +1230,46 @@ function saveCfg() {
 }
 async function testCfg() {
   const b = $('cfgTest');
+  const box = $('cfgResult');
   b.disabled = true; b.textContent = 'Test en cours…';
+  const provider = $('cfgProvider').value;
+  const proxy = $('cfgProxy').value.trim();
+  box.hidden = false;
+
+  /* Sans fournisseur d'horaires, c'est le proxy qu'on vérifie : son point
+     /health dit quelles clés et quel cache sont en place, sans consommer
+     de requête chez SerpApi. */
+  if (provider === 'local') {
+    if (!proxy) {
+      box.className = 'notice warn';
+      box.textContent = "Rien à tester : ni fournisseur d'horaires, ni proxy.";
+      b.disabled = false; b.textContent = 'Tester';
+      return;
+    }
+    try {
+      const res = await fetch(proxy.replace(/\/$/, '') + '/health');
+      const h = await res.json();
+      if (!res.ok || !h || h.ok !== true) throw new Error('réponse inattendue');
+      const bits = [];
+      bits.push(h.serpapi ? 'clé SerpApi présente' : 'clé SerpApi absente');
+      bits.push(h.kv ? 'cache actif' : 'cache absent');
+      if (h.quota) bits.push(`quota ${h.quota.used}/${h.quota.cap}`);
+      box.className = 'notice' + (h.serpapi ? '' : ' warn');
+      box.textContent = 'Proxy joignable. ' + bits.join(', ') + '.'
+        + (h.serpapi ? '' : " Les prix resteront indisponibles tant que SERPAPI_KEY n'est pas configurée.");
+    } catch (e) {
+      box.className = 'notice warn';
+      box.textContent = 'Proxy injoignable. Vérifiez l\'URL, sans barre oblique finale.';
+    }
+    b.disabled = false; b.textContent = 'Tester';
+    return;
+  }
+
   const saved = CFG.get();
-  CFG.set({ provider: $('cfgProvider').value, key: $('cfgKey').value.trim(), proxy: $('cfgProxy').value.trim() });
+  CFG.set({ provider, key: $('cfgKey').value.trim(), proxy });
   const r = await fetchLive({ aps: ['CDG'] }, { aps: ['JFK', 'LHR', 'MAD', 'FCO', 'AMS'] }, new Date());
   CFG.set(saved);
-  b.disabled = false; b.textContent = 'Tester la clé';
-  const box = $('cfgResult');
-  box.hidden = false;
+  b.disabled = false; b.textContent = 'Tester';
   box.className = 'notice' + (r.ok ? '' : ' warn');
   box.textContent = r.ok
     ? `Connexion réussie. ${r.flights.length} vol(s) correspondant au test.`
@@ -1228,9 +1279,11 @@ function paintStatus() {
   const el = $('status');
   if (!el) return;
   const base = `${FL.length.toLocaleString('fr-FR')} vols · ${APL.length} aéroports · ${Object.keys(CTY).length} pays`;
-  if (!navigator.onLine) el.textContent = base + ' · hors ligne';
-  else if (CFG.ready()) el.textContent = base + ' · temps réel via ' + PROVIDERS[CFG.provider()].label;
-  else el.textContent = base;
+  const extra = [];
+  if (CFG.ready()) extra.push('temps réel via ' + PROVIDERS[CFG.provider()].label);
+  if (CFG.proxy()) extra.push('prix activés');
+  if (!navigator.onLine) extra.push('hors ligne');
+  el.textContent = base + (extra.length ? ' · ' + extra.join(' · ') : '');
 }
 
 /* ---------- Initialisation ---------- */
@@ -1246,6 +1299,7 @@ $('cfgClose').onclick = closeCfg;
 $('cfgSave').onclick = saveCfg;
 $('cfgTest').onclick = testCfg;
 $('cfgProvider').onchange = () => { syncCfg(); $('cfgResult').hidden = true; };
+$('cfgProxy').addEventListener('input', paintProxyState);
 
 paintRecent();
 paintStatus();
