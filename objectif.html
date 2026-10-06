@@ -38,7 +38,7 @@
 
   <h1>Objectif et besoin</h1>
   <p class="lead">SkySearch répond à une question précise : quelles liaisons aériennes existent
-    entre deux endroits. Pas quel billet acheter.</p>
+    entre deux endroits. Le prix vient en complément, quand c'est possible.</p>
 
   <h2>Le besoin</h2>
   <p>Les comparateurs de vols sont conçus pour vendre. Ils demandent une date exacte, un aéroport
@@ -75,7 +75,7 @@
     d'accent, des lignes de texte plutôt que des cartes décorées. Le thème sombre suit le
     réglage du système, il ne se choisit pas dans l'application.</p>
 
-  <h2 id="prix">Pourquoi il n'y a pas de prix</h2>
+  <h2 id="prix">Les prix, et pourquoi ils sont conditionnels</h2>
   <p>C'est la fonctionnalité la plus demandée, et celle qui bute sur un obstacle extérieur au
     projet. Les prix de vols ne sont pas des données ouvertes : ils appartiennent aux compagnies
     et aux systèmes de distribution, qui les diffusent sous contrat.</p>
@@ -88,13 +88,30 @@
     <div><dt>Skyscanner</dt><dd>partenariat commercial, pas d'offre publique</dd></div>
     <div><dt>Duffel</dt><dd>bac à sable avec des prix fictifs ; en production,
       facturation à la commande</dd></div>
-    <div><dt>Travelpayouts</dt><dd>prix en cache, modèle d'affiliation. Techniquement le plus
-      accessible, mais les données sont différées et le modèle suppose de rémunérer le site
-      à la réservation, ce qui réintroduit exactement ce que ce projet évite.</dd></div>
+    <div><dt>Travelpayouts</dt><dd>prix en cache et modèle d'affiliation, ce qui réintroduit
+      exactement ce que ce projet évite</dd></div>
+    <div><dt>SerpApi</dt><dd>lit Google Flights et assume le risque juridique. 250 requêtes
+      gratuites par mois, puis 25 $ pour mille. C'est l'option retenue.</dd></div>
   </dl>
-  <p>Afficher des prix mis en cache plusieurs jours, ou des prix de démonstration, serait pire
-    que de ne rien afficher : l'information paraîtrait fiable sans l'être. Tant qu'il n'existe
-    pas d'accès gratuit à des tarifs réels, SkySearch n'affiche pas de prix.</p>
+
+  <h3>Ce qui est affiché, et quand</h3>
+  <p>Les prix n'apparaissent que si un proxy avec une clé SerpApi est configuré, et seulement
+    quand le départ et l'arrivée désignent <b>un seul aéroport chacun</b>. Une recherche
+    « France vers Grèce » couvre 220 couples d'aéroports : elle consommerait le quota mensuel
+    en une seule requête utilisateur.</p>
+  <p>Le quota est la contrainte qui dicte tout le reste. Les réponses sont donc mises en cache
+    vingt-quatre heures côté serveur, et le proxy refuse de dépasser un plafond mensuel
+    configurable. Une liaison consultée vingt fois dans la journée ne coûte qu'une requête.</p>
+
+  <h3>Ce que ces prix valent</h3>
+  <p>Ils viennent de Google Flights, pour un aller simple et une personne. Ils sont indicatifs
+    et doivent être confirmés sur le site de vente. Les numéros de vol de la base étant générés,
+    un tarif porte en général sur la liaison et non sur les vols listés, ce que l'interface
+    précise quand c'est le cas.</p>
+  <p class="notice warn"><b>Sur un site public, les prix ne sont pas tenables gratuitement.</b>
+    250 requêtes par mois tiennent pour un usage personnel, pas pour un site ouvert où les
+    visiteurs cherchent des liaisons imprévisibles. Sans proxy configuré, SkySearch n'affiche
+    aucun prix et ne le mentionne pas : la fonction n'existe simplement pas pour ce visiteur.</p>
 
   <h2>Ce que SkySearch ne fera pas</h2>
   <ul class="body">

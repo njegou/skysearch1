@@ -45,6 +45,7 @@
       <li><a href="#donnees">La base de données</a></li>
       <li><a href="#horaires">Comment les horaires sont calculés</a></li>
       <li><a href="#temps-reel">Mode temps réel</a></li>
+      <li><a href="#prix">Prix des vols</a></li>
       <li><a href="#proxy">Le proxy</a></li>
       <li><a href="#liens">Liens de partage</a></li>
       <li><a href="#hors-ligne">Hors ligne et installation</a></li>
@@ -157,10 +158,63 @@
   <p>Les réponses du fournisseur sont conservées quatre-vingt-dix secondes, en mémoire et sur
     disque, pour éviter de consommer le quota sur des recherches répétées.</p>
 
+  <h2 id="prix">Prix des vols</h2>
+  <p>SkySearch peut afficher le tarif d'une liaison, via SerpApi qui lit Google Flights.
+    Cette fonction se comporte différemment des horaires, pour une raison de quota.</p>
+
+  <h3>Le proxy est obligatoire ici</h3>
+  <p>Pour les horaires, chacun peut saisir sa propre clé dans le navigateur. Pour les prix, non :
+    SerpApi n'accepte pas les appels venant d'un navigateur, et son offre gratuite plafonne à
+    250 requêtes par mois. Une clé exposée côté client serait vidée en quelques minutes.
+    <a href="#proxy">Le proxy</a> est donc le seul chemin possible.</p>
+
+  <h3>Un seul aéroport de chaque côté</h3>
+  <p>Une requête SerpApi porte sur un couple d'aéroports et une date. Une recherche
+    <code>France → Grèce</code> en demanderait 220, soit le quota mensuel en une fois.</p>
+  <p>Les prix ne sont donc demandés que lorsque le départ et l'arrivée désignent un seul
+    aéroport chacun. <code>CDG → ATH</code> déclenche une requête,
+    <code>Paris → ATH</code> n'en déclenche aucune, parce que Paris couvre CDG et ORY.
+    L'interface explique pourquoi quand elle ne peut pas afficher de prix.</p>
+
+  <h3>Deux niveaux de cache</h3>
+  <dl class="facts">
+    <div><dt>Navigateur</dt><dd>6 heures, pour éviter de rappeler le proxy en naviguant</dd></div>
+    <div><dt>Worker, via KV</dt><dd>24 heures, c'est lui qui rend les 250 requêtes tenables :
+      une liaison consultée vingt fois dans la journée n'en coûte qu'une</dd></div>
+  </dl>
+
+  <h3>Le plafond mensuel</h3>
+  <p>Le Worker tient un compteur par mois et refuse les requêtes au-delà d'un plafond
+    (220 par défaut, sous les 250 gratuites). Sans ce garde-fou, un robot viderait le quota en
+    quelques minutes. Le compteur exige le binding KV ; sans lui le Worker fonctionne, mais
+    sans protection.</p>
+  <p>Une erreur du fournisseur n'incrémente pas le compteur, puisqu'elle ne consomme pas de
+    requête chez SerpApi.</p>
+
+  <h3>Ce que le prix recouvre</h3>
+  <p>Aller simple, une personne, en euros. Le tarif le plus bas en direct est affiché, et celui
+    avec escale quand il est nettement inférieur, clairement étiqueté comme tel.</p>
+  <p>Un tarif n'est rattaché à un vol précis que si son numéro figure dans un itinéraire sans
+    escale de Google Flights. Les numéros de la base étant générés, cela n'arrive qu'en mode
+    temps réel. Sinon le tarif porte sur la liaison, et l'interface le dit.</p>
+
+  <h3>Configurer</h3>
+  <pre><code>wrangler secret put SERPAPI_KEY
+wrangler kv namespace create SKYCACHE
+# reporter l'id dans wrangler.toml :
+#   [[kv_namespaces]]
+#   binding = "SKYCACHE"
+#   id = "..."
+wrangler deploy</code></pre>
+  <p>Collez l'URL du Worker dans <b>Source des données</b>, champ Proxy. Le point
+    <code>/health</code> du Worker indique quelles clés et quel binding sont en place.</p>
+  <p>Sans proxy configuré, SkySearch n'affiche aucun prix et n'en parle pas.</p>
+
   <h2 id="proxy">Le proxy</h2>
-  <p>Le fichier <code>worker.js</code> du dépôt est un Worker Cloudflare prêt à déployer. Il
-    règle trois problèmes à la fois : la clé reste côté serveur, les en-têtes CORS manquants
-    sont ajoutés, et les fournisseurs qui n'exposent que HTTP sont réécrits en HTTPS.</p>
+  <p>Le fichier <code>worker.js</code> du dépôt est un Worker Cloudflare prêt à déployer.
+    Il remplit deux rôles : relayer les fournisseurs d'horaires en gardant la clé côté serveur,
+    et servir <a href="#prix">les prix</a>. Au passage il ajoute les en-têtes CORS manquants et
+    réécrit en HTTPS les fournisseurs limités à HTTP.</p>
   <pre><code>npm i -g wrangler
 wrangler init skysearch-proxy
 # remplacer src/index.js par worker.js
@@ -194,8 +248,8 @@ aeroports.html?q=Grèce</code></pre>
       liens fonctionnent.</li>
     <li><b>Vols sans escale uniquement.</b> Aucun calcul de correspondance. Une liaison absente
       des résultats existe souvent avec une escale.</li>
-    <li><b>Aucun prix.</b> Voir <a href="./objectif.html#prix">la page Objectif</a> pour les
-      raisons.</li>
+    <li><b>Prix conditionnels.</b> Ils demandent un proxy avec une clé SerpApi, et un seul
+      aéroport de chaque côté. Voir <a href="#prix">plus haut</a>.</li>
     <li><b>Pas de sièges, pas de réservation.</b> SkySearch informe, il ne vend rien.</li>
   </ul>
 

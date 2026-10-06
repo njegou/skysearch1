@@ -41,13 +41,15 @@ vitesse réaliste. Les 14 222 vols passent ce contrôle.
 
 ## Pages
 
-| Page | Contenu |
+| Fichier | Contenu |
 |---|---|
 | `index.html` | recherche |
 | `aeroports.html` | les 317 aéroports, filtrables et triables |
 | `docs.html` | fonctionnement, modèle de données, mode temps réel, proxy |
 | `objectif.html` | pourquoi le projet existe et ce qu'il ne fera pas |
 | `contact.html` | proposer une fonctionnalité |
+| `worker.js` | proxy Cloudflare : horaires et prix |
+| `wrangler.toml` | configuration du proxy |
 
 ---
 
@@ -92,6 +94,41 @@ contact.html?type=airport&title=BRU%20manquant
 ```
 
 ---
+
+## Prix des vols (optionnel)
+
+Via SerpApi, qui lit Google Flights. Cette fonction impose le proxy : SerpApi n'accepte pas les
+appels navigateur, et son offre gratuite plafonne à 250 requêtes par mois. Une clé exposée côté
+client serait vidée en quelques minutes.
+
+```bash
+wrangler secret put SERPAPI_KEY
+wrangler kv namespace create SKYCACHE    # reporter l'id dans wrangler.toml
+wrangler deploy
+```
+
+### La règle d'un seul aéroport
+
+Une requête SerpApi porte sur un couple d'aéroports et une date. `France → Grèce` en demanderait
+220, soit le quota mensuel en une recherche. Les prix ne sont donc demandés que si le départ et
+l'arrivée désignent **un seul aéroport chacun**. `CDG → ATH` déclenche une requête,
+`Paris → ATH` non, puisque Paris couvre CDG et ORY.
+
+### Ce qui rend 250 requêtes tenables
+
+| Protection | Effet |
+|---|---|
+| Cache navigateur | 6 heures |
+| Cache Worker (KV) | 24 heures, une liaison vue vingt fois ne coûte qu'une requête |
+| Plafond mensuel | 220 par défaut, le Worker refuse au-delà |
+| Validation stricte | un paramètre invalide est rejeté sans appeler SerpApi |
+| Erreurs non comptées | une erreur amont n'incrémente pas le compteur |
+
+Le point `/health` du Worker indique quelles clés et quel binding sont en place.
+
+**Sur un site public, les prix ne sont pas tenables gratuitement.** 250 requêtes par mois
+suffisent à un usage personnel, pas à un site ouvert. Sans proxy configuré, SkySearch n'affiche
+aucun prix et n'en parle pas.
 
 ## Temps réel (optionnel)
 
@@ -157,8 +194,9 @@ Ne modifiez pas `data.js` à la main, il est écrasé à chaque génération.
 - **Numéros générés**, donc le lien « statut en direct » peut ne rien trouver pour un vol de la
   base. En mode temps réel, les numéros viennent du fournisseur et les liens fonctionnent.
 - **Vols sans escale uniquement.** Aucun calcul de correspondance.
-- **Aucun prix.** Les raisons sont sur la page Objectif : il n'existe plus d'accès gratuit à des
-  tarifs réels depuis la fermeture d'Amadeus Self-Service en juillet 2026.
+- **Prix conditionnels.** Ils exigent un proxy avec clé SerpApi et un seul aéroport de chaque
+  côté. Un tarif n'est rattaché à un vol précis que si son numéro correspond, ce qui n'arrive
+  qu'en mode temps réel puisque les numéros de la base sont générés.
 - **Les intégrations API n'ont pas été testées contre les serveurs réels**, seulement contre des
   fixtures reproduisant la forme documentée des réponses. Le bouton « Tester la clé » sert à
   valider au premier usage.
@@ -179,6 +217,10 @@ Ne modifiez pas `data.js` à la main, il est écrasé à chaque génération.
 - fuzz sur 24 entrées dégénérées, rendu de 508 vols, échappement HTML, clé absente du DOM
 - rendu réel sous Chromium à 390 px et 1100 px, thèmes clair et sombre,
   débordement horizontal nul sur les cinq pages
+- Worker : validation des paramètres (7 cas rejetés sans appel), normalisation,
+  cache KV, plafond mensuel, erreurs amont, liste blanche d'hôtes, CORS
+- prix côté client : déclenchement conditionnel, cache, rattachement par numéro de vol,
+  3 chemins d'échec, liste de vols affichée avant la réponse de prix
 
 ## Licence
 

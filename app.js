@@ -589,13 +589,197 @@ const faRoute = (a, b) => `https://www.flightaware.com/live/findflight?origin=${
 const fr24Url = n => `https://www.flightradar24.com/data/flights/${String(n).toLowerCase()}`;
 
 /* ============================================================
+   10. PRIX (SerpApi via le proxy)
+   ------------------------------------------------------------
+   Contrairement aux horaires, les prix ne peuvent pas passer par une clé
+   saisie dans le navigateur : SerpApi n'accepte pas les appels navigateur,
+   et son offre gratuite plafonne à 250 requêtes par mois. Une clé exposée
+   serait vidée en quelques minutes. Le proxy est donc la seule voie.
+
+   Règle de déclenchement : une requête SerpApi porte sur UN couple
+   d'aéroports. Une recherche « France vers Grèce » en demanderait 220.
+   Les prix ne sont donc demandés que lorsque le départ et l'arrivée se
+   résolvent chacun à un seul aéroport.
+   ============================================================ */
+
+const PRICE_TTL = 6 * 60 * 60 * 1000;      // 6 h côté navigateur, 24 h côté Worker
+const priceMem = new Map();
+
+function priceKey(from, to, date) {
+  return `${from}:${to}:${ymd(date)}`;
+}
+
+function priceCacheGet(k) {
+  const m = priceMem.get(k);
+  if (m && Date.now() - m.t < PRICE_TTL) return m.v;
+  try {
+    const raw = safeGet('ss4_p_' + k);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (Date.now() - o.t < PRICE_TTL) { priceMem.set(k, o); return o.v; }
+    }
+  } catch (e) { }
+  return null;
+}
+
+function priceCachePut(k, v) {
+  const o = { t: Date.now(), v };
+  priceMem.set(k, o);
+  try { safeSet('ss4_p_' + k, JSON.stringify(o)); } catch (e) { }
+}
+
+/* Les prix sont-ils demandables pour cette recherche ? */
+function priceEligible(from, to) {
+  if (!CFG.proxy()) return { ok: false, why: 'no-proxy' };
+  if (!from || !to) return { ok: false, why: 'incomplete' };
+  if (from.aps.length !== 1 || to.aps.length !== 1) return { ok: false, why: 'too-broad' };
+  if (from.aps[0] === to.aps[0]) return { ok: false, why: 'same' };
+  return { ok: true, from: from.aps[0], to: to.aps[0] };
+}
+
+async function fetchPrices(from, to, date) {
+  const el = priceEligible(from, to);
+  if (!el.ok) return { ok: false, reason: el.why };
+
+  const k = priceKey(el.from, el.to, date);
+  const hit = priceCacheGet(k);
+  if (hit) return { ok: true, data: hit, cached: true };
+
+  const base = CFG.proxy().replace(/\/$/, '');
+  const url = `${base}/serpapi?from=${el.from}&to=${el.to}&date=${ymd(date)}&currency=EUR`;
+
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 22000);
+  try {
+    const res = await fetch(url, { signal: ctl.signal });
+    clearTimeout(timer);
+    const body = await res.json().catch(() => null);
+    if (!res.ok || (body && body.error)) {
+      const code = (body && body.error && body.error.code) || (res.status === 429 ? 'quota' : 'http');
+      return { ok: false, reason: code, status: res.status, message: body && body.error && body.error.message };
+    }
+    priceCachePut(k, body);
+    return { ok: true, data: body };
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') return { ok: false, reason: 'timeout' };
+    return { ok: false, reason: navigator.onLine ? 'unreachable' : 'offline', message: e.message };
+  }
+}
+
+/* ---------- Mise en forme ---------- */
+
+const eur = n => (n == null || !isFinite(n)) ? null
+  : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+
+const LEVEL_FR = {
+  low: 'prix bas pour cette liaison',
+  typical: 'prix habituel pour cette liaison',
+  high: 'prix élevé pour cette liaison'
+};
+
+/* Un prix n'est rattaché à un vol que si son numéro figure dans
+   l'itinéraire, et seulement pour un itinéraire sans escale. Sans cette
+   double condition, on collerait un prix d'escale sur un vol direct. */
+function priceForFlight(data, num) {
+  if (!data || !Array.isArray(data.options)) return null;
+  const matches = data.options.filter(o => o.stops === 0 && o.numbers.includes(num));
+  if (!matches.length) return null;
+  return Math.min(...matches.map(o => o.price));
+}
+
+function pricePanelHTML(state) {
+  const p = state.prices;
+  if (!p) return '';
+
+  if (p.loading) {
+    return `<p class="pricebox loading-px">Recherche des prix…</p>`;
+  }
+
+  if (p.error) {
+    const M = {
+      quota: "Le plafond mensuel de requêtes de prix est atteint. Il se réinitialise le 1er du mois.",
+      'no-key': "Le proxy n'a pas de clé SerpApi configurée.",
+      'bad-date': "Les prix ne sont disponibles que pour une date à venir, dans les onze prochains mois.",
+      timeout: "Le service de prix n'a pas répondu à temps.",
+      unreachable: "Le proxy est injoignable.",
+      offline: "Aucune connexion.",
+      http: "Le service de prix a renvoyé une erreur."
+    };
+    return `<p class="pricebox err">${esc(M[p.error] || 'Prix indisponibles.')}
+      ${p.message ? `<span class="px-detail">${esc(p.message)}</span>` : ''}</p>`;
+  }
+
+  const d = p.data;
+  if (!d || d.cheapest == null) {
+    return `<p class="pricebox">Aucun tarif trouvé pour cette date.
+      ${d && d.googleUrl ? `<a href="${esc(d.googleUrl)}" target="_blank" rel="noopener noreferrer">Vérifier sur Google Flights</a>` : ''}</p>`;
+  }
+
+  /* « à partir de 142 en direct, 96 avec escale » se lit mal : la somme la
+     plus basse doit ouvrir la phrase. On construit donc deux phrases. */
+  let main;
+  if (d.cheapestDirect != null) {
+    main = `Vol direct à partir de <b>${eur(d.cheapestDirect)}</b>`;
+    if (d.cheapest != null && d.cheapest < d.cheapestDirect) {
+      main += `, ou ${eur(d.cheapest)} avec une escale`;
+    }
+    main += '.';
+  } else {
+    main = `À partir de <b>${eur(d.cheapest)}</b>, avec escale uniquement.`;
+  }
+  if (d.typical && d.typical.length === 2) {
+    main += ` Cette liaison se paie habituellement ${eur(d.typical[0])} à ${eur(d.typical[1])}.`;
+  }
+
+  const age = d.fetchedAt ? ageLabel(d.fetchedAt) : null;
+
+  /* Les numéros de vol de la base sont générés : ils ne peuvent pas
+     correspondre à ceux de Google Flights. Le dire évite de laisser croire
+     que le tarif porte sur les vols listés ci-dessous. */
+  const tagged = S.flights.some(f => priceForFlight(d, f.num) != null);
+  const scope = tagged
+    ? ''
+    : ' Ces tarifs portent sur la liaison, pas sur les vols listés ci-dessous.';
+
+  return `<div class="pricebox">
+    <p class="px-main">${main}</p>
+    <p class="px-meta">${d.level && LEVEL_FR[d.level] ? esc(LEVEL_FR[d.level]) + '. ' : ''}Source Google Flights${age ? ', relevé ' + esc(age) : ''}.
+      Aller simple, une personne.${scope} Tarif indicatif, à confirmer sur le site de vente.
+      ${d.googleUrl ? `<a href="${esc(d.googleUrl)}" target="_blank" rel="noopener noreferrer">Ouvrir Google Flights</a>` : ''}</p>
+  </div>`;
+}
+
+function ageLabel(iso) {
+  const t = new Date(iso);
+  if (isNaN(t)) return null;
+  const min = Math.round((Date.now() - t.getTime()) / 60000);
+  if (min < 2) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `il y a ${h} h`;
+  return `il y a ${Math.round(h / 24)} j`;
+}
+
+/* Explique pourquoi aucun prix n'est proposé, quand c'est utile. */
+function priceHintHTML(from, to) {
+  const el = priceEligible(from, to);
+  if (el.ok) return '';
+  if (el.why === 'too-broad') {
+    return `<p class="px-hint">Les prix demandent un aéroport précis de chaque côté.
+      Cette recherche en couvre ${from.aps.length} au départ et ${to.aps.length} à l'arrivée.</p>`;
+  }
+  return '';   // sans proxy configuré, on ne dit rien : la fonction n'existe pas pour cet utilisateur
+}
+
+/* ============================================================
    9. INTERFACE
    Rendu sobre : des lignes de texte, pas des cartes décorées.
    ============================================================ */
 const $ = id => document.getElementById(id);
 const reduced = () => { try { return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
-const S = { from: null, to: null, date: null, flights: [], shown: 0, sort: 'dep', source: 'local', error: null };
+const S = { from: null, to: null, date: null, flights: [], shown: 0, sort: 'dep', source: 'local', error: null, prices: null };
 const PAGE = 10;
 
 /* ---------- Champs avec autocomplétion ---------- */
@@ -708,6 +892,8 @@ function timeHTML(f, side) {
 
 function flightHTML(f) {
   const facts = [];
+  const px = (S.prices && S.prices.data) ? priceForFlight(S.prices.data, f.num) : null;
+  if (px != null) facts.push(`<b class="px-tag">${eur(px)}</b>`);
   if (f.dur) facts.push(fmtDur(f.dur));
   if (f.dist) facts.push(f.dist.toLocaleString('fr-FR') + ' km');
   if (f.ac) facts.push(esc(f.ac));
@@ -761,6 +947,8 @@ function render() {
     <p class="meta">${src}. ${S.from.aps.length} aéroport${S.from.aps.length > 1 ? 's' : ''} au départ,
       ${S.to.aps.length} à l'arrivée.</p>
   </div>`;
+
+  html += pricePanelHTML(S) + priceHintHTML(S.from, S.to);
 
   html += `<div class="results-head">
     <p class="n"><b>${list.length}</b> vol${list.length > 1 ? 's' : ''} sans escale</p>
@@ -880,7 +1068,7 @@ async function go() {
   if (!S.to) { toast('Indiquez une arrivée'); $('to').focus(); return; }
   const d = parseYmd($('date').value);
   if (!d) { toast('Indiquez une date'); $('date').focus(); return; }
-  S.date = d; S.error = null; S.sort = 'dep';
+  S.date = d; S.error = null; S.sort = 'dep'; S.prices = null;
 
   busy = true;
   const btn = $('go'), out = $('out');
@@ -909,6 +1097,7 @@ async function go() {
 
   function finish() {
     render();
+    loadPrices();
     pushRecent();
     busy = false; btn.disabled = false;
     try {
@@ -919,6 +1108,26 @@ async function go() {
       try { h.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { }
     }
   }
+}
+
+/* Les prix arrivent après la liste : un échec de ce côté ne doit jamais
+   retarder ni empêcher l'affichage des horaires. */
+async function loadPrices() {
+  const el = priceEligible(S.from, S.to);
+  if (!el.ok) { S.prices = null; return; }
+  if (!S.flights.length) { S.prices = null; return; }
+
+  const token = Symbol('px');
+  S.priceToken = token;
+  S.prices = { loading: true };
+  render();
+
+  const r = await fetchPrices(S.from, S.to, S.date);
+  /* Une recherche plus récente a pu démarrer entre-temps. */
+  if (S.priceToken !== token) return;
+
+  S.prices = r.ok ? { data: r.data } : { error: r.reason, message: r.message };
+  render();
 }
 
 function swap() {

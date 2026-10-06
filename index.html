@@ -110,9 +110,9 @@
 
 <dialog id="cfg" aria-labelledby="cfgTitle">
   <h2 id="cfgTitle">Source des données</h2>
-  <p class="hint" style="margin-bottom:1rem">La base embarquée répond toujours. Avec une clé,
-    SkySearch interroge en plus un fournisseur pour obtenir les vols réels du jour, quand le
-    trajet vise au plus deux aéroports de chaque côté.</p>
+  <p class="hint" style="margin-bottom:1rem">La base embarquée répond toujours. Une clé ajoute
+    les vols réels du jour, quand le trajet vise au plus deux aéroports de chaque côté.
+    Un proxy ajoute les prix, quand il n'en vise qu'un seul de chaque côté.</p>
 
   <div class="field">
     <label for="cfgProvider">Fournisseur</label>
@@ -137,8 +137,9 @@
     <div class="field">
       <label for="cfgProxy">Proxy (optionnel)</label>
       <input type="url" id="cfgProxy" placeholder="https://mon-worker.workers.dev" spellcheck="false">
-      <p class="hint">Nécessaire si le fournisseur bloque les appels navigateur.
-        Voir <a href="./docs.html#proxy">la documentation</a>.</p>
+      <p class="hint">Nécessaire si le fournisseur bloque les appels navigateur,
+        et <b>obligatoire pour afficher les prix</b>.
+        Voir <a href="./docs.html#prix">la documentation</a>.</p>
     </div>
     <p class="notice" id="cfgResult" hidden></p>
   </div>

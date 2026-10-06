@@ -363,6 +363,29 @@ li.flight.off { opacity: .55; }
   font-family: var(--sans);
 }
 
+/* ---------- Prix ---------- */
+.pricebox {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--ok);
+  background: var(--ok-bg);
+  border-radius: 0 6px 6px 0;
+  padding: .7rem .85rem;
+  margin-bottom: 1rem;
+  font-size: .875rem;
+}
+.pricebox.err, .pricebox.loading-px {
+  border-left-color: var(--border2);
+  background: var(--panel);
+  color: var(--text2);
+}
+.pricebox p { margin: 0; }
+.px-main { font-size: 1rem; }
+.px-main b { font-size: 1.15rem; }
+.px-meta { font-size: .8rem; color: var(--text2); margin-top: .3rem !important; }
+.px-detail { display: block; font-size: .8rem; margin-top: .2rem; }
+.px-hint { font-size: .8rem; color: var(--text3); margin: -.5rem 0 1rem; }
+.px-tag { color: var(--ok); font-weight: 700; }
+
 .notice {
   font-size: .8rem; color: var(--text2);
   background: var(--panel); border: 1px solid var(--border);

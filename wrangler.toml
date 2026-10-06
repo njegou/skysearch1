@@ -1,0 +1,18 @@
+# Configuration du proxy SkySearch.
+# Déploiement :
+#   npm i -g wrangler
+#   wrangler kv namespace create SKYCACHE     puis reporter l'id ci-dessous
+#   wrangler secret put SERPAPI_KEY
+#   wrangler deploy
+#
+# Le binding KV n'est pas obligatoire, mais sans lui il n'y a ni cache de
+# 24 heures ni plafond mensuel : le quota gratuit part en quelques minutes
+# si le Worker est public.
+
+name = "skysearch-proxy"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# [[kv_namespaces]]
+# binding = "SKYCACHE"
+# id = "collez_ici_l_id_renvoye_par_wrangler"
